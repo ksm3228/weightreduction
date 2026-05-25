@@ -673,7 +673,7 @@ body::before {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut }
+import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 /* ── Firebase 설정 ─────────────────────────────────────────────────── */
@@ -720,7 +720,21 @@ function showApp() {
 
 window.googleLogin = async () => {
   try {
-    const res = await signInWithPopup(auth, provider);
+    await signInWithRedirect(auth, provider);
+  } catch(e) { alert('로그인 실패: ' + e.message); }
+};
+
+// 리디렉션 결과 처리 (페이지 복귀 후 자동 실행)
+getRedirectResult(auth).catch(e => console.error(e));
+  
+window.googleLogin = async () => {
+  try {
+    // 로그인 버튼
+window.googleLogin = async () => {
+  try {
+    await signInWithRedirect(auth, provider);
+  } catch(e) { alert('로그인 실패: ' + e.message); }
+};
     if (!ALLOWED_EMAILS.includes(res.user.email)) {
       await signOut(auth);
       alert('접근 권한이 없습니다.');
