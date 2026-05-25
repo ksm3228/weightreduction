@@ -922,10 +922,10 @@ function render() {
           <button class="btn-sm danger" onclick="askDelPatient(${p.id})">삭제</button>
           <button class="btn-sm" style="border-color:var(--accent);color:var(--accent)" onclick="openMeasureSheet(${p.id},null)">+ 측정</button>
         </div>
-        <span class="chevron ${isOpen?'open'}" id="chev-${p.id}">⌄</span>
+        <span class="chevron ${isOpen ? 'open' : ''}" id="chev-${p.id}">⌄</span>
       </div>
       ${p.memo ? `<div style="padding:6px 16px 8px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border)">${p.memo}</div>` : ''}
-      <div class="drug-section ${isOpen?'open'}" id="ds-${p.id}">
+      <div class="drug-section ${isOpen ? 'open' : ''}" id="ds-${p.id}">
         ${drugSections || '<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px">측정 기록이 없습니다<br><br><button class="btn-sm" style="border-color:var(--accent);color:var(--accent)" onclick="openMeasureSheet('+p.id+',null)">+ 첫 측정 추가</button></div>'}
       </div>
     </div>`;
