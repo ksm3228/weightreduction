@@ -142,22 +142,41 @@ body::before {
 /* 환자 헤더 */
 .patient-header {
   display: flex; align-items: center;
-  padding: 14px 16px; gap: 10px;
+  padding: 10px 12px; gap: 6px;
   cursor: pointer; user-select: none;
   border-bottom: 1px solid var(--border);
   background: var(--surface2);
+  flex-wrap: nowrap;
 }
-.patient-header:active { background: var(--surface3) }
+
+  .patient-header-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.btn-sm {
+  padding: 4px 7px; border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: transparent; color: var(--text2);
+  font-size: 10px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+  transition: all .15s;
+}
+  
+  .patient-header:active { background: var(--surface3) }
 .reg-badge {
   font-family: var(--mono); font-size: 11px;
   color: var(--text3); background: var(--surface3);
   border: 1px solid var(--border); border-radius: 6px;
   padding: 3px 7px; flex-shrink: 0;
 }
+  
 .patient-name {
-  font-size: 15px; font-weight: 700; flex: 1;
+  font-size: 14px; font-weight: 700; flex: 1;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
+
+
+  
 .height-badge {
   font-family: var(--mono); font-size: 12px;
   color: var(--accent); background: rgba(0,212,170,0.1);
@@ -172,13 +191,15 @@ body::before {
 .patient-header-actions {
   display: flex; gap: 6px; flex-shrink: 0;
 }
+  
 .btn-sm {
-  padding: 4px 10px; border-radius: 6px;
+  padding: 4px 7px; border-radius: 6px;
   border: 1px solid var(--border2);
   background: transparent; color: var(--text2);
-  font-size: 11px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+  font-size: 10px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
   transition: all .15s;
 }
+  
 .btn-sm:hover { background: var(--surface3); color: var(--text) }
 .btn-sm.danger { border-color: var(--danger); color: var(--danger) }
 .btn-sm.danger:hover { background: rgba(255,71,87,0.1) }
@@ -510,7 +531,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v2.0)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v2.1)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
