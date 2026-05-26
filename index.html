@@ -167,12 +167,13 @@ body::before {
 }
   
 .patient-name {
-  font-size: 14px; font-weight: 700; flex: 1;
+  font-size: 14px; font-weight: 700;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
+  min-width: 3em;
+  flex: 1;
 }
 
 
@@ -531,7 +532,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v2.1)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v2.2)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -960,13 +961,11 @@ function render() {
       <div class="patient-header" onclick="togglePatient(${p.id})">
         <span class="reg-badge">${p.regNo || '—'}</span>
         <span class="patient-name">${p.name}${p.gender ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">('+p.gender+')</span>' : ''}</span>
-        ${p.height ? `<span class="height-badge">${p.height}cm</span>` : ''}
-        ${latestLoss !== null ? `<span class="summary-chip" style="font-size:11px">${latestLoss}%↓</span>` : ''}
-        <div class="patient-header-actions" onclick="event.stopPropagation()">
-          <button class="btn-sm" onclick="openPatientSheet(${p.id})">수정</button>
-          <button class="btn-sm danger" onclick="askDelPatient(${p.id})">삭제</button>
-          <button class="btn-sm" style="border-color:var(--accent);color:var(--accent)" onclick="openMeasureSheet(${p.id},null)">+ 측정</button>
-        </div>
+        // 교체할 코드
+${latestLoss !== null ? `<span class="summary-chip" style="font-size:11px">${latestLoss}%↓</span>` : ''}
+<div class="patient-header-actions" onclick="event.stopPropagation()">
+  <button class="btn-sm" onclick="openPatientSheet(${p.id})">수정</button>
+</div>
         <span class="chevron ${isOpen ? 'open' : ''}" id="chev-${p.id}">⌄</span>
       </div>
       ${p.memo ? `<div style="padding:6px 16px 8px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border)">${p.memo}</div>` : ''}
