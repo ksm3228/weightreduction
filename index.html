@@ -532,7 +532,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v2.2)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v2.3)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -567,9 +567,10 @@ body::before {
   </div>
 
   <!-- 검색 -->
-  <div class="search-bar">
-    <input class="search-input" id="searchInput" placeholder="🔍  이름 / 등록번호 검색..." oninput="render()">
-  </div>
+  <div class="search-bar" style="display:flex;gap:8px;align-items:center">
+  <input class="search-input" id="searchInput" placeholder="🔍  이름 / 등록번호 검색..." oninput="render()" style="flex:1">
+  <button id="btnEdit" onclick="toggleEditMode()" style="padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;flex-shrink:0">편집</button>
+</div>
 
   <!-- 환자 목록 -->
   <div class="patient-list" id="patientList"></div>
@@ -964,7 +965,10 @@ function render() {
         // 교체할 코드
 ${latestLoss !== null ? `<span class="summary-chip" style="font-size:11px">${latestLoss}%↓</span>` : ''}
 <div class="patient-header-actions" onclick="event.stopPropagation()">
-  <button class="btn-sm" onclick="openPatientSheet(${p.id})">수정</button>
+  ${editMode
+    ? `<button class="btn-sm danger" onclick="askDelPatient(${p.id})">삭제</button>`
+    : `<button class="btn-sm" onclick="openPatientSheet(${p.id})">수정</button>`
+  }
 </div>
         <span class="chevron ${isOpen ? 'open' : ''}" id="chev-${p.id}">⌄</span>
       </div>
@@ -1247,6 +1251,17 @@ const SAMPLE_DATA = [
     ]
   },
 ];
+
+let editMode = false;
+window.toggleEditMode = function() {
+  editMode = !editMode;
+  const btn = document.getElementById('btnEdit');
+  btn.textContent = editMode ? '완료' : '편집';
+  btn.style.color = editMode ? '#d93025' : '';
+  btn.style.borderColor = editMode ? '#d93025' : '';
+  render();
+};
+  
 </script>
 </body>
 </html>
