@@ -962,7 +962,7 @@ function render() {
       <div class="patient-header" onclick="togglePatient(${p.id})">
         <span class="reg-badge">${p.regNo || '—'}</span>
         <span class="patient-name">${p.name}${p.gender ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">('+p.gender+')</span>' : ''}</span>
-        // 교체할 코드
+        
 ${latestLoss !== null ? `<span class="summary-chip" style="font-size:11px">${latestLoss}%↓</span>` : ''}
 <div class="patient-header-actions" onclick="event.stopPropagation()">
   ${editMode
