@@ -540,7 +540,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v2.5)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v2.6)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -754,24 +754,7 @@ window.googleLogin = async () => {
     await signInWithRedirect(auth, provider);
   } catch(e) { alert('로그인 실패: ' + e.message); }
 };
-
-// 리디렉션 결과 처리 (페이지 복귀 후 자동 실행)
 getRedirectResult(auth).catch(e => console.error(e));
-  
-window.googleLogin = async () => {
-  try {
-    // 로그인 버튼
-window.googleLogin = async () => {
-  try {
-    await signInWithRedirect(auth, provider);
-  } catch(e) { alert('로그인 실패: ' + e.message); }
-};
-    if (!ALLOWED_EMAILS.includes(res.user.email)) {
-      await signOut(auth);
-      alert('접근 권한이 없습니다.');
-    }
-  } catch(e) { alert('로그인 실패: ' + e.message); }
-};
 window.googleLogout = () => signOut(auth);
 
 onAuthStateChanged(auth, user => {
