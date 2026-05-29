@@ -959,7 +959,12 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
         
 ${(() => {
   const latestBMI = lastMeasure ? calcBMI(lastMeasure.curWeight, p.height) : null;
-  return latestBMI ? `<span class="summary-chip chip-low" style="border-color:rgba(0,120,212,0.3);background:rgba(0,120,212,0.08);color:#0078d4">BMI ${latestBMI}</span>` : '';
+  if (!latestBMI) return '';
+  const bv = parseFloat(latestBMI);
+  const bStyle = bv >= 30
+    ? 'border-color:rgba(217,48,37,0.4);background:rgba(217,48,37,0.1);color:#d93025'
+    : 'border-color:rgba(0,120,212,0.3);background:rgba(0,120,212,0.08);color:#0078d4';
+  return `<span class="summary-chip" style="${bStyle}">BMI ${latestBMI}</span>`;
 })()}
 ${latestLoss !== null ? `<span class="summary-chip ${parseFloat(latestLoss)>=10?'chip-good':parseFloat(latestLoss)>=5?'chip-warn':'chip-low'}">${latestLoss}%↓</span>` : ''}
 <div class="patient-header-actions" onclick="event.stopPropagation()">
