@@ -541,7 +541,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v4.8)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v4.9)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -990,7 +990,7 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
       <div class="patient-header" onclick="togglePatient(${p.id})" style="${isOverdue ? 'background:#ffe8e8' : ''}">
         <span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0;min-width:1.5em;text-align:center">${idx+1}</span>
         <span class="reg-badge">${p.regNo || '—'}</span>
-        <span class="patient-name">${p.name}${p.gender ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">('+p.gender+')</span>' : ''}${p.age ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">'+p.age+'세</span>' : ''}${lastMeasure?.date ? '<span style="font-size:11px;color:var(--accent2);margin-left:6px;font-family:var(--mono)">'+fmtDate(lastMeasure.date)+'</span>' : ''}</span>
+        <span class="patient-name">${p.name}${p.gender ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">('+p.gender+')</span>' : ''}${p.age ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">'+p.age+'세</span>' : ''}${lastMeasure?.date ? '<span style="font-size:11px;color:var(--accent2);margin-left:6px;font-family:var(--mono)">'+fmtDate(lastMeasure.date)+'<span style="color:var(--text3);margin-left:3px">('+Math.floor((new Date()-new Date(lastMeasure.date))/(1000*60*60*24))+'일전)</span></span>' : ''}
         
 ${(() => {
   const latestBMI = lastMeasure ? calcBMI(lastMeasure.curWeight, p.height) : null;
