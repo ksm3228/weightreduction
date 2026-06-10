@@ -541,7 +541,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v4.5)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v4.6)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -682,9 +682,10 @@ body::before {
         <input type="text" id="ms_bmi" readonly placeholder="키 입력 시 자동계산"
           style="background:var(--surface3);color:var(--accent2);cursor:not-allowed;font-family:var(--mono)">
       </div>
-      <div class="form-group">
+      <div class="form-group" id="doseGroup" style="display:none">
         <label>처방 용량</label>
-        <input type="text" id="ms_dose" placeholder="예) 15mg, 2.5mg">
+        <div id="doseBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <input type="text" id="ms_dose" placeholder="직접 입력도 가능">
       </div>
       <div class="form-group">
         <label>메모</label>
@@ -1116,13 +1117,46 @@ window.editMeasure = (patientId, measureId) => {
   updateCalc();
 };
 
+const DOSE_OPTIONS = {
+  '마운자로': ['2.5mg','5mg','7.5mg','10mg'],
+  '큐시미아': ['3.75/23mg','7.5/46mg','11.25/69mg','15/92mg'],
+  'Xenical':  ['120mg'],
+};
+
 window.selectDrug = drug => {
   selectedDrug = drug;
   document.getElementById('ms_drug').value = drug;
   ['큐시미아','마운자로','위고비','삭센다'].forEach(d => {
     document.getElementById('drug-'+d).classList.toggle('selected', d === drug);
   });
-  // 같은 약물의 초기체중 자동 채우기
+
+  // 용량 버튼 렌더
+  const doses = DOSE_OPTIONS[drug] || [];
+  const doseGroup = document.getElementById('doseGroup');
+  const doseBtns = document.getElementById('doseBtns');
+  if (doses.length) {
+    doseGroup.style.display = 'block';
+    doseBtns.innerHTML = doses.map(d => `
+      <button type="button" onclick="selectDose('${d}')"
+        id="dose-btn-${d.replace('/','_')}"
+        style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);
+               background:var(--surface2);color:var(--text2);font-size:12px;
+               cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s">
+        ${d}
+      </button>`).join('');
+    // 직전 같은 약물 용량 자동 선택
+    const patientId = parseInt(document.getElementById('ms_patientId').value);
+    const p = all.find(x => x.id === patientId);
+    if (p) {
+      const same = (p.measurements||[]).filter(m => m.drug === drug).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+      if (same.length && same[0].dose) selectDose(same[0].dose);
+    }
+  } else {
+    doseGroup.style.display = doses.length === 0 && drug ? 'block' : 'none';
+    doseBtns.innerHTML = '';
+  }
+
+  // 초기체중 자동 채우기
   const patientId = parseInt(document.getElementById('ms_patientId').value);
   const p = all.find(x => x.id === patientId);
   if (p) {
@@ -1132,6 +1166,17 @@ window.selectDrug = drug => {
       updateCalc();
     }
   }
+};
+
+window.selectDose = dose => {
+  document.getElementById('ms_dose').value = dose;
+  document.querySelectorAll('#doseBtns button').forEach(btn => {
+    const isSelected = btn.textContent.trim() === dose;
+    btn.style.background = isSelected ? 'rgba(0,120,212,0.1)' : 'var(--surface2)';
+    btn.style.borderColor = isSelected ? '#0078d4' : 'var(--border2)';
+    btn.style.color = isSelected ? '#0078d4' : 'var(--text2)';
+    btn.style.fontWeight = isSelected ? '700' : '400';
+  });
 };
 
 function setupMeasureCalc() {
