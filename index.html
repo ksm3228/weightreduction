@@ -540,7 +540,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v4.2)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v4.3)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -957,9 +957,18 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
       </div>
     `).join('');
 
+    // 마지막 측정일 기준 2개월 초과 여부
+    const isOverdue = (() => {
+      if (!lastMeasure?.date) return false;
+      const last = new Date(lastMeasure.date);
+      const now = new Date();
+      const diffDays = (now - last) / (1000 * 60 * 60 * 24);
+      return diffDays > 60;
+    })();
+
     return `
-    <div class="patient-block" id="pb-${p.id}">
-      <div class="patient-header" onclick="togglePatient(${p.id})">
+    <div class="patient-block" id="pb-${p.id}" style="${isOverdue ? 'background:#fff3f3;border-color:rgba(217,48,37,0.25)' : ''}">
+      <div class="patient-header" onclick="togglePatient(${p.id})" style="${isOverdue ? 'background:#ffe8e8' : ''}">
         <span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0;min-width:1.5em;text-align:center">${idx+1}</span>
         <span class="reg-badge">${p.regNo || '—'}</span>
         <span class="patient-name">${p.name}${p.gender ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">('+p.gender+')</span>' : ''}</span>
