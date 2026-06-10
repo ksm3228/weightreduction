@@ -130,7 +130,7 @@ body::before {
 
 .patient-block {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid var(--text);
   border-radius: var(--radius-lg);
   margin-bottom: 16px;
   overflow: hidden;
@@ -214,7 +214,7 @@ body::before {
 .drug-section.open { display: block }
 .drug-group {
   background: var(--surface2); border-radius: var(--radius);
-  border: 1.5px solid var(--text);
+  border: 1px solid var(--border2);
   margin-bottom: 10px; overflow: hidden;
 }
 .drug-header {
@@ -541,7 +541,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v6.2)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v6.3)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -995,27 +995,33 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
 
     return `
     <div class="patient-block" id="pb-${p.id}" style="${isOverdue ? 'background:#fff3f3;border-color:rgba(217,48,37,0.25)' : ''}">
-      <div class="patient-header" onclick="togglePatient(${p.id})" style="${isOverdue ? 'background:#ffe8e8' : ''}">
-        <span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0;min-width:1.5em;text-align:center">${idx+1}</span>
-        <span class="reg-badge">${p.regNo || '—'}</span>
-        <span class="patient-name">${p.name}${p.gender ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">('+p.gender+')</span>' : ''}${p.age ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">'+p.age+'세</span>' : ''}${lastMeasure?.date ? '<span style="font-size:11px;color:var(--text3);margin-left:6px;font-family:var(--mono)">('+Math.floor((new Date()-new Date(lastMeasure.date))/(1000*60*60*24))+'일전)</span>' : ''}</span>
-${(() => {
-  const latestBMI = lastMeasure ? calcBMI(lastMeasure.curWeight, p.height) : null;
-  if (!latestBMI) return '';
-  const bv = parseFloat(latestBMI);
-  const bStyle = bv >= 30
-    ? 'border-color:rgba(217,48,37,0.4);background:rgba(217,48,37,0.1);color:#d93025'
-    : 'border-color:rgba(0,120,212,0.3);background:rgba(0,120,212,0.08);color:#0078d4';
-  return `<span class="summary-chip" style="${bStyle};flex-shrink:0">BMI ${latestBMI}</span>`;
-})()}
-${latestLoss !== null ? `<span class="summary-chip ${parseFloat(latestLoss)>=10?'chip-good':parseFloat(latestLoss)>=5?'chip-warn':'chip-low'}" style="flex-shrink:0">${latestLoss}%↓</span>` : ''}
-<div class="patient-header-actions" onclick="event.stopPropagation()">
-  ${editMode
-    ? `<button class="btn-sm danger" onclick="askDelPatient(${p.id})">삭제</button>`
-    : `<button class="btn-sm" onclick="openPatientSheet(${p.id})">수정</button>`
-  }
-</div>
-        <span class="chevron ${isOpen ? 'open' : ''}" id="chev-${p.id}">⌄</span>
+      <div class="patient-header" onclick="togglePatient(${p.id})" style="flex-direction:column;align-items:stretch;gap:6px;${isOverdue ? 'background:#ffe8e8' : ''}">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0;min-width:1.5em;text-align:center">${idx+1}</span>
+          <span class="reg-badge">${p.regNo || '—'}</span>
+          <span style="font-size:15px;font-weight:700;flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</span>
+          ${p.gender ? `<span style="font-size:11px;color:var(--text3);flex-shrink:0">(${p.gender})</span>` : ''}
+          ${p.age ? `<span style="font-size:11px;color:var(--text3);flex-shrink:0">${p.age}세</span>` : ''}
+          ${lastMeasure?.date ? `<span style="font-size:11px;color:var(--text3);font-family:var(--mono);flex-shrink:0">(${Math.floor((new Date()-new Date(lastMeasure.date))/(1000*60*60*24))}일전)</span>` : ''}
+          <div class="patient-header-actions" onclick="event.stopPropagation()" style="flex-shrink:0">
+            ${editMode
+              ? `<button class="btn-sm danger" onclick="askDelPatient(${p.id})">삭제</button>`
+              : `<button class="btn-sm" onclick="openPatientSheet(${p.id})">수정</button>`}
+          </div>
+          <span class="chevron ${isOpen ? 'open' : ''}" id="chev-${p.id}">⌄</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding-left:calc(1.5em + 6px)">
+          ${(() => {
+            const latestBMI = lastMeasure ? calcBMI(lastMeasure.curWeight, p.height) : null;
+            if (!latestBMI) return '';
+            const bv = parseFloat(latestBMI);
+            const bStyle = bv >= 30
+              ? 'border-color:rgba(217,48,37,0.4);background:rgba(217,48,37,0.1);color:#d93025'
+              : 'border-color:rgba(0,120,212,0.3);background:rgba(0,120,212,0.08);color:#0078d4';
+            return `<span class="summary-chip" style="${bStyle}">BMI ${latestBMI}</span>`;
+          })()}
+          ${latestLoss !== null ? `<span class="summary-chip ${parseFloat(latestLoss)>=10?'chip-good':parseFloat(latestLoss)>=5?'chip-warn':'chip-low'}">${latestLoss}%↓</span>` : ''}
+        </div>
       </div>
       ${p.memo ? `<div style="padding:6px 16px 8px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border)">${p.memo}</div>` : ''}
       <div class="drug-section ${isOpen ? 'open' : ''}" id="ds-${p.id}">
