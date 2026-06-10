@@ -541,7 +541,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v4.6)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v4.7)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -929,7 +929,13 @@ const lastWeight = lastMeasure?.curWeight;
 const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) : null;
     const latestBMI = lastMeasure ? calcBMI(lastMeasure.curWeight, p.height) : null;
 
-    const drugSections = Object.entries(byDrug).map(([drug, mArr]) => `
+    const drugSections = Object.entries(byDrug)
+      .sort((a, b) => {
+        const aFirst = a[1].reduce((min, m) => m.date < min ? m.date : min, a[1][0]?.date || '');
+        const bFirst = b[1].reduce((min, m) => m.date < min ? m.date : min, b[1][0]?.date || '');
+        return aFirst.localeCompare(bFirst);
+      })
+      .map(([drug, mArr]) => `
       <div class="drug-group">
         <div class="drug-header">
           <span class="drug-name">${drug}</span>
