@@ -962,7 +962,15 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
                 <td class="date-col">${fmtDate(m.date)||'—'}</td>
                 <td>${m.initWeight ? m.initWeight+'kg' : '—'}</td>
                 <td style="font-weight:600">${m.curWeight ? m.curWeight+'kg' : '—'}</td>
-                <td class="loss-col ${lossClass(r)}">${r !== null ? r+'%' : '—'}</td>
+                <td class="loss-col">
+                  ${r !== null ? `<span style="
+                    display:inline-block;padding:3px 10px;border-radius:8px;font-weight:700;font-size:13px;
+                    ${parseFloat(r)>=10 ? 'background:rgba(11,158,124,0.15);color:#087a60;border:1.5px solid rgba(11,158,124,0.4)' :
+                      parseFloat(r)>=5  ? 'background:rgba(217,119,6,0.15);color:#b45309;border:1.5px solid rgba(217,119,6,0.4)' :
+                      parseFloat(r)>0   ? 'background:rgba(107,114,128,0.1);color:#4b5563;border:1.5px solid rgba(107,114,128,0.3)' :
+                                          'background:rgba(217,48,37,0.1);color:#d93025;border:1.5px solid rgba(217,48,37,0.3)'}
+                  ">${r}%</span>` : '—'}
+                </td>
                 <td><span class="bmi-chip ${bmiClass(bmi)}">${bmi||'—'}</span></td>
                 <td style="color:var(--accent2);font-weight:600">${m.dose||'—'}</td>
                 <td>
