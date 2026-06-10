@@ -615,9 +615,16 @@ body::before {
           <input type="text" id="ps_name" placeholder="홍길동님">
         </div>
         <div class="form-group">
+          <label>나이</label>
+          <input type="number" id="ps_age" placeholder="45" inputmode="numeric">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
           <label>키 (cm)</label>
           <input type="number" id="ps_height" placeholder="165" step="0.1" inputmode="decimal">
         </div>
+        <div class="form-group" style="visibility:hidden"></div>
       </div>
       <div class="form-group">
         <label>메모</label>
@@ -976,7 +983,7 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
       <div class="patient-header" onclick="togglePatient(${p.id})" style="${isOverdue ? 'background:#ffe8e8' : ''}">
         <span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0;min-width:1.5em;text-align:center">${idx+1}</span>
         <span class="reg-badge">${p.regNo || '—'}</span>
-        <span class="patient-name">${p.name}${p.gender ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">('+p.gender+')</span>' : ''}</span>
+        <span class="patient-name">${p.name}${p.gender ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">('+p.gender+')</span>' : ''}${p.age ? '<span style="font-size:11px;color:var(--text3);margin-left:4px">'+p.age+'세</span>' : ''}</span>
         
 ${(() => {
   const latestBMI = lastMeasure ? calcBMI(lastMeasure.curWeight, p.height) : null;
@@ -1021,11 +1028,12 @@ window.openPatientSheet = id => {
     const p = all.find(x => x.id === id);
     document.getElementById('ps_regNo').value = p.regNo || '';
     document.getElementById('ps_name').value = p.name || '';
+    document.getElementById('ps_age').value = p.age || '';
     document.getElementById('ps_height').value = p.height || '';
     document.getElementById('ps_gender').value = p.gender || '';
     document.getElementById('ps_memo').value = p.memo || '';
   } else {
-    ['ps_regNo','ps_name','ps_height','ps_memo'].forEach(f => document.getElementById(f).value = '');
+    ['ps_regNo','ps_name','ps_age','ps_height','ps_memo'].forEach(f => document.getElementById(f).value = '');
     document.getElementById('ps_gender').value = '';
   }
   document.getElementById('patientSheet').classList.add('open');
@@ -1038,6 +1046,7 @@ window.savePatient = () => {
   const fid = document.getElementById('ps_id').value;
   const data = {
     regNo, name,
+    age: parseInt(document.getElementById('ps_age').value) || null,
     height: parseFloat(document.getElementById('ps_height').value) || null,
     gender: document.getElementById('ps_gender').value,
     memo: document.getElementById('ps_memo').value.trim(),
