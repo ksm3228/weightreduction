@@ -1034,6 +1034,17 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
               : 'border-color:rgba(0,120,212,0.3);background:rgba(0,120,212,0.08);color:#0078d4';
             return `<span class="summary-chip" style="${bStyle}">BMI ${latestBMI}</span>`;
           })()}
+          ${(() => {
+            const lastWithWHR = [...measures].sort((a,b) => (b.date||'').localeCompare(a.date||'')).find(m => m.waist && m.hip);
+            if (!lastWithWHR) return '';
+            const whr = (lastWithWHR.waist / lastWithWHR.hip).toFixed(2);
+            const limit = p.gender === '남' ? 0.90 : 0.85;
+            const isObese = parseFloat(whr) > limit;
+            const wStyle = isObese
+              ? 'border-color:rgba(217,48,37,0.4);background:rgba(217,48,37,0.1);color:#d93025'
+              : 'border-color:rgba(11,158,124,0.4);background:rgba(11,158,124,0.12);color:#087a60';
+            return `<span class="summary-chip" style="${wStyle}">WHR ${whr}</span>`;
+          })()}
           ${latestLoss !== null ? `<span class="summary-chip ${parseFloat(latestLoss)>=10?'chip-good':parseFloat(latestLoss)>=5?'chip-warn':'chip-low'}">${latestLoss}%↓</span>` : ''}
         </div>
       </div>
