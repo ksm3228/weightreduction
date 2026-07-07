@@ -541,7 +541,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v7.0)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v7.1)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -684,13 +684,17 @@ body::before {
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>허리둘레 (cm)</label>
-          <input type="number" id="ms_waist" placeholder="85" step="0.1" inputmode="decimal">
+          <label>허리둘레 (cm) <span style="font-size:10px;color:var(--text3);font-weight:400">남≥90 / 여≥85</span></label>
+          <input type="number" id="ms_waist" placeholder="85" step="0.1" inputmode="decimal" oninput="updateWHR()">
         </div>
         <div class="form-group">
           <label>엉덩이둘레 (cm)</label>
-          <input type="number" id="ms_hip" placeholder="95" step="0.1" inputmode="decimal">
+          <input type="number" id="ms_hip" placeholder="95" step="0.1" inputmode="decimal" oninput="updateWHR()">
         </div>
+      </div>
+      <div class="form-group" id="whrGroup" style="display:none">
+        <label>Waist-to-Hip Ratio <span style="font-size:10px;color:var(--text3);font-weight:400">남>0.90 / 여>0.85</span></label>
+        <input type="text" id="ms_whr" readonly style="background:var(--surface3);font-family:var(--mono);cursor:not-allowed" id="ms_whr">
       </div>
       <div class="form-group" id="doseGroup" style="display:none">
         <label>처방 용량</label>
@@ -1150,6 +1154,26 @@ window.editMeasure = (patientId, measureId) => {
   updateCalc();
 };
 
+window.updateWHR = function() {
+  const waist = parseFloat(document.getElementById('ms_waist').value);
+  const hip   = parseFloat(document.getElementById('ms_hip').value);
+  const group = document.getElementById('whrGroup');
+  const el    = document.getElementById('ms_whr');
+  if (waist && hip) {
+    const whr = (waist / hip).toFixed(2);
+    const patientId = parseInt(document.getElementById('ms_patientId').value);
+    const p = all.find(x => x.id === patientId);
+    const gender = p?.gender;
+    const limit = gender === '남' ? 0.90 : 0.85;
+    const isObese = parseFloat(whr) > limit;
+    el.value = whr + (isObese ? '  ⚠️ 복부비만' : '  ✅ 정상');
+    el.style.color = isObese ? '#d93025' : '#0b9e7c';
+    group.style.display = 'block';
+  } else {
+    group.style.display = 'none';
+  }
+};
+  
 const DOSE_OPTIONS = {
   '마운자로': ['2.5mg','5mg','7.5mg','10mg'],
   '큐시미아': ['3.75/23mg','7.5/46mg','11.25/69mg','15/92mg'],
