@@ -541,7 +541,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v7.3)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v8.0)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1125,8 +1125,9 @@ window.openMeasureSheet = (patientId, drug) => {
   document.getElementById('ms_hip').value = '';
   document.getElementById('ms_memo').value = '';
   // 약물 버튼 초기화
+  selectedDrugs = drug ? [drug] : [];
   ['큐시미아','마운자로','위고비','삭센다'].forEach(d => {
-    document.getElementById('drug-'+d).classList.toggle('selected', d === drug);
+    document.getElementById('drug-'+d).classList.toggle('selected', selectedDrugs.includes(d));
   });
   const p = all.find(x => x.id === patientId);
   document.getElementById('measureSheetTitle').textContent =
@@ -1157,8 +1158,9 @@ window.editMeasure = (patientId, measureId) => {
   document.getElementById('ms_waist').value = m.waist || '';
   document.getElementById('ms_hip').value = m.hip || '';
   document.getElementById('ms_memo').value = m.memo || '';
+  selectedDrugs = m.drug ? m.drug.split('+') : [];
   ['큐시미아','마운자로','위고비','삭센다'].forEach(d => {
-    document.getElementById('drug-'+d).classList.toggle('selected', d === m.drug);
+    document.getElementById('drug-'+d).classList.toggle('selected', selectedDrugs.includes(d));
   });
   document.getElementById('measureSheetTitle').textContent = '측정 기록 수정';
   document.getElementById('measureSheet').classList.add('open');
@@ -1192,11 +1194,15 @@ const DOSE_OPTIONS = {
   'Xenical':  ['120mg'],
 };
 
+let selectedDrugs = [];
+
 window.selectDrug = drug => {
-  selectedDrug = drug;
-  document.getElementById('ms_drug').value = drug;
+  const idx = selectedDrugs.indexOf(drug);
+  if (idx >= 0) selectedDrugs.splice(idx, 1);
+  else selectedDrugs.push(drug);
+  document.getElementById('ms_drug').value = selectedDrugs.join('+');
   ['큐시미아','마운자로','위고비','삭센다'].forEach(d => {
-    document.getElementById('drug-'+d).classList.toggle('selected', d === drug);
+    document.getElementById('drug-'+d).classList.toggle('selected', selectedDrugs.includes(d));
   });
 
   // 용량 버튼 렌더
@@ -1268,7 +1274,7 @@ function updateCalc() {
 window.saveMeasure = () => {
   const patientId = parseInt(document.getElementById('ms_patientId').value);
   const measureId = document.getElementById('ms_measureId').value;
-  const drug = document.getElementById('ms_drug').value || selectedDrug;
+  const drug = selectedDrugs.length > 0 ? selectedDrugs.join('+') : document.getElementById('ms_drug').value;
   if (!drug) { alert('약물을 선택하세요.'); return; }
   const curWeight = parseFloat(document.getElementById('ms_curWeight').value);
   if (!curWeight) { alert('현재체중을 입력하세요.'); return; }
