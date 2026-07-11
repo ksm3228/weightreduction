@@ -541,7 +541,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v8.1)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v8.2)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -986,7 +986,7 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
                 <td><span class="bmi-chip ${bmiClass(bmi)}">${bmi||'—'}</span></td>
                 <td style="color:var(--accent2);font-weight:600">${
                   m.doses && Object.keys(m.doses).length
-                    ? Object.entries(m.doses).filter(([,v])=>v).map(([k,v])=>`<span style="display:block;font-size:11px"><span style="color:var(--text3)">${k}:</span> ${v}</span>`).join('')
+                    ? Object.entries(m.doses).map(([k,v])=>`<span style="display:block;font-size:11px"><span style="color:var(--text3)">${k}:</span> ${v||'—'}</span>`).join('')
                     : (m.dose||'—')
                 }</td>
                 <td>
