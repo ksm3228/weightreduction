@@ -228,7 +228,7 @@ body::before {
   display: flex; align-items: center; gap: 6px;
 }
 .drug-name::before {
-  content: '💊'; font-size: 12px;
+  content: ''; font-size: 12px;
 }
 
 /* 측정 테이블 */
@@ -952,7 +952,7 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
       .map(([drug, mArr]) => `
       <div class="drug-group">
         <div class="drug-header">
-          <span class="drug-name">${drug}</span>
+          <span class="drug-name">${drug.split('+').map(d => (['마운자로','위고비','삭센다'].includes(d)?'💉':'💊')+' '+d).join(' + ')}</span>
           <button class="btn-sm" onclick="openMeasureSheet(${p.id},'${drug}')">+ 측정 추가</button>
         </div>
         <table class="measure-table">
