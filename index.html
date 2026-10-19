@@ -1059,7 +1059,7 @@ const latestLoss = initWeight && lastWeight ? lossRate(initWeight, lastWeight) :
             const range = maxV - minV || 1;
             const W = 60, H = 22, pad = 2;
             const xs = pts.map((_,i) => pad + (i / (pts.length-1)) * (W - pad*2));
-            const ys = pts.map(v => H - pad - ((v - minV) / range) * (H - pad*2));
+            const ys = pts.map(v => pad + ((maxV - v) / range) * (H - pad*2));
             const path = xs.map((x,i) => (i===0?'M':'L')+x.toFixed(1)+','+ys[i].toFixed(1)).join(' ');
             const lastColor = pts[pts.length-1] >= 10 ? '#087a60' : pts[pts.length-1] >= 5 ? '#b45309' : '#d93025';
             return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="flex-shrink:0;vertical-align:middle">
