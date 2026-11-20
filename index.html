@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.1)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.2)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1725,11 +1725,17 @@ window.renderOsteo = function() {
     html += '</div></div>';
 
     // D-day 뱃지 행
-    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--border)">';
+    html += '<div style="padding:10px 14px;border-bottom:1px solid var(--border)">';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
     html += ddayChip(nextProlia, '💉프롤리아');
     html += ddayChip(nextBmd, '🦴BMD');
-    if (lastProlia) html += '<span style="font-size:11px;color:var(--text3)">최근주사: ' + fmtDate(lastProlia.date) + '</span>';
-    if (lastBmd)    html += '<span style="font-size:11px;color:var(--text3)">최근BMD: ' + fmtDate(lastBmd.date) + '</span>';
+    html += '</div>';
+    if (lastProlia || lastBmd) {
+      html += '<div style="display:flex;gap:12px;margin-top:5px">';
+      if (lastProlia) html += '<span style="font-size:11px;color:var(--text3)">최근주사: ' + fmtDate(lastProlia.date) + '</span>';
+      if (lastBmd)    html += '<span style="font-size:11px;color:var(--text3)">최근BMD: ' + fmtDate(lastBmd.date) + '</span>';
+      html += '</div>';
+    }
     html += '</div>';
 
     // 기록 목록
