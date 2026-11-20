@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.9)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.0)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1724,6 +1724,9 @@ window.renderOsteo = function() {
     const nextProlia = nextDate(lastProlia?.date, 6);
     const nextBmd    = nextDate(lastBmd?.date, 12);
     const pDays = nextProlia ? daysUntil(nextProlia) : null;
+    const bDays = nextBmd    ? daysUntil(nextBmd)    : null;
+    const pDaysCls = pDays !== null ? (pDays < 0 ? '#d93025' : pDays <= 30 ? '#d93025' : pDays <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
+    const bDaysCls = bDays !== null ? (bDays < 0 ? '#d93025' : bDays <= 30 ? '#d93025' : bDays <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
     const blockBorder = pDays !== null && pDays <= 30 ? 'border-color:rgba(217,48,37,0.5);border-width:2px' : '';
 
     var html = '<div class="osteo-block" style="' + blockBorder + '">';
@@ -1743,10 +1746,6 @@ window.renderOsteo = function() {
 
     // 프롤리아 / BMD 통합 박스 (D-day 칩+바+날짜 모두 각 박스 안)
     var dateFont = '"Apple SD Gothic Neo","Malgun Gothic","나눔고딕",sans-serif';
-    var pDays = nextProlia ? daysUntil(nextProlia) : null;
-    var bDays = nextBmd    ? daysUntil(nextBmd)    : null;
-    var pDaysCls = pDays !== null ? (pDays < 0 ? '#d93025' : pDays <= 30 ? '#d93025' : pDays <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
-    var bDaysCls = bDays !== null ? (bDays < 0 ? '#d93025' : bDays <= 30 ? '#d93025' : bDays <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
     var pElapsed = nextProlia && lastProlia ? Math.min(100, Math.max(0, Math.round((180 - (pDays||0)) / 180 * 100))) : null;
     var bElapsed = nextBmd    && lastBmd    ? Math.min(100, Math.max(0, Math.round((365 - (bDays||0)) / 365 * 100))) : null;
 
