@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.2)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.3)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1726,21 +1726,31 @@ window.renderOsteo = function() {
 
     // D-day 뱃지 행
     html += '<div style="padding:10px 14px;border-bottom:1px solid var(--border)">';
-    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:' + (lastProlia||lastBmd?'7px':'0') + '">';
     html += ddayChip(nextProlia, '💉프롤리아');
     html += ddayChip(nextBmd, '🦴BMD');
     html += '</div>';
     if (lastProlia || lastBmd) {
-      html += '<div style="display:flex;gap:12px;margin-top:5px">';
-      if (lastProlia) html += '<span style="font-size:11px;color:var(--text3)">최근주사: ' + fmtDate(lastProlia.date) + '</span>';
-      if (lastBmd)    html += '<span style="font-size:11px;color:var(--text3)">최근BMD: ' + fmtDate(lastBmd.date) + '</span>';
+      html += '<div style="display:flex;gap:16px">';
+      if (lastProlia) {
+        html += '<div style="display:flex;flex-direction:column;gap:1px">';
+        html += '<span style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.03em">💉 최근주사</span>';
+        html += '<span style="font-size:12px;font-weight:600;color:var(--text1);font-family:var(--mono)">' + fmtDate(lastProlia.date) + '</span>';
+        html += '</div>';
+      }
+      if (lastBmd) {
+        html += '<div style="display:flex;flex-direction:column;gap:1px">';
+        html += '<span style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.03em">🦴 최근BMD</span>';
+        html += '<span style="font-size:12px;font-weight:600;color:var(--text1);font-family:var(--mono)">' + fmtDate(lastBmd.date) + '</span>';
+        html += '</div>';
+      }
       html += '</div>';
     }
     html += '</div>';
 
-    // 기록 목록
+    // 기록 목록 (오래된 순)
     if (p.records && p.records.length) {
-      var sortedRecs = [...p.records].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      var sortedRecs = [...p.records].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
       sortedRecs.forEach(function(r) {
         var typeLabel = r.type === 'prolia' ? '💉 프롤리아' : '🦴 BMD';
         var extra = '';
