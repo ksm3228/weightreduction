@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.4)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.5)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1740,22 +1740,33 @@ window.renderOsteo = function() {
     html += ddayChip(lastProlia?.date||null, nextProlia, '💉프롤리아', 180);
     html += ddayChip(lastBmd?.date||null, nextBmd, '🦴BMD', 365);
     html += '</div>';
-    if (lastProlia || lastBmd) {
-      html += '<div style="display:flex;gap:16px">';
-      if (lastProlia) {
-        html += '<div style="display:flex;flex-direction:column;gap:1px">';
-        html += '<span style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.03em">💉 최근주사</span>';
-        html += '<span style="font-size:12px;font-weight:600;color:var(--text1);font-family:var(--mono)">' + fmtDate(lastProlia.date) + '</span>';
-        html += '</div>';
-      }
-      if (lastBmd) {
-        html += '<div style="display:flex;flex-direction:column;gap:1px">';
-        html += '<span style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.03em">🦴 최근BMD</span>';
-        html += '<span style="font-size:12px;font-weight:600;color:var(--text1);font-family:var(--mono)">' + fmtDate(lastBmd.date) + '</span>';
-        html += '</div>';
-      }
-      html += '</div>';
-    }
+    // 최근날짜 + 다음예정일 2열 그리드
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:4px">';
+
+    // 프롤리아
+    html += '<div>';
+    html += '<span style="font-size:10px;font-weight:600;color:var(--text3)">💉 최근주사</span><br>';
+    html += '<span style="font-size:12px;font-weight:700;color:var(--text1);font-family:var(--mono)">' + (lastProlia ? fmtDate(lastProlia.date) : '—') + '</span>';
+    html += '</div>';
+    // BMD
+    html += '<div>';
+    html += '<span style="font-size:10px;font-weight:600;color:var(--text3)">🦴 최근BMD</span><br>';
+    html += '<span style="font-size:12px;font-weight:700;color:var(--text1);font-family:var(--mono)">' + (lastBmd ? fmtDate(lastBmd.date) : '—') + '</span>';
+    html += '</div>';
+
+    // 다음예정일
+    var pDaysCls = nextProlia ? (daysUntil(nextProlia) < 0 ? '#d93025' : daysUntil(nextProlia) <= 30 ? '#d93025' : daysUntil(nextProlia) <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
+    var bDaysCls = nextBmd    ? (daysUntil(nextBmd)    < 0 ? '#d93025' : daysUntil(nextBmd)    <= 30 ? '#d93025' : daysUntil(nextBmd)    <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
+    html += '<div>';
+    html += '<span style="font-size:10px;font-weight:600;color:var(--text3)">📅 다음주사예정</span><br>';
+    html += '<span style="font-size:12px;font-weight:700;color:' + pDaysCls + ';font-family:var(--mono)">' + (nextProlia ? fmtDate(nextProlia) : '—') + '</span>';
+    html += '</div>';
+    html += '<div>';
+    html += '<span style="font-size:10px;font-weight:600;color:var(--text3)">📅 다음BMD예정</span><br>';
+    html += '<span style="font-size:12px;font-weight:700;color:' + bDaysCls + ';font-family:var(--mono)">' + (nextBmd ? fmtDate(nextBmd) : '—') + '</span>';
+    html += '</div>';
+
+    html += '</div>';
     html += '</div>';
 
     // 기록 목록 (오래된 순)
