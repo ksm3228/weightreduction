@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.8)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.9)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1666,6 +1666,13 @@ function ddayChip(lastDateStr, nextDateStr, label, totalDays) {
     + '</div>';
 }
 
+function dDayText(days) {
+  if (days === null) return '미기록';
+  if (days < 0) return '⚠️ ' + Math.abs(days) + '일 초과';
+  if (days === 0) return '🔴 오늘';
+  return 'D-' + days;
+}
+
 /* ── 골다공증 renderOsteo ── */
 window.renderOsteo = function() {
   const query = (document.getElementById('osteoSearchInput')?.value || '').trim().toLowerCase();
@@ -1742,13 +1749,6 @@ window.renderOsteo = function() {
     var bDaysCls = bDays !== null ? (bDays < 0 ? '#d93025' : bDays <= 30 ? '#d93025' : bDays <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
     var pElapsed = nextProlia && lastProlia ? Math.min(100, Math.max(0, Math.round((180 - (pDays||0)) / 180 * 100))) : null;
     var bElapsed = nextBmd    && lastBmd    ? Math.min(100, Math.max(0, Math.round((365 - (bDays||0)) / 365 * 100))) : null;
-
-    function dDayText(days) {
-      if (days === null) return '미기록';
-      if (days < 0) return '⚠️ ' + Math.abs(days) + '일 초과';
-      if (days === 0) return '🔴 오늘';
-      return 'D-' + days;
-    }
 
     html += '<div style="padding:10px 14px;border-bottom:1px solid var(--border)">';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
