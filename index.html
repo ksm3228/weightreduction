@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f7f8fc">
-<title>체중 감량 관리</title>
+<title>비만·골다공증 클리닉</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -511,8 +511,68 @@ body::before {
 
 .chip-good { background: rgba(11,158,124,0.15); border-color: rgba(11,158,124,0.5); color: #087a60; }
 .chip-warn { background: rgba(217,119,6,0.15); border-color: rgba(217,119,6,0.5); color: #b45309; }
-.chip-low  { background: rgba(107,114,128,0.12); border-color: rgba(107,114,128,0.4); color: #4b5563; }  
-  
+.chip-low  { background: rgba(107,114,128,0.12); border-color: rgba(107,114,128,0.4); color: #4b5563; }
+
+/* ── 탭 ── */
+.tab-bar {
+  display: flex; background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  position: sticky; top: 57px; z-index: 25;
+}
+.tab-btn {
+  flex: 1; padding: 11px 8px; font-size: 13px; font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); border-bottom: 3px solid transparent;
+  margin-bottom: -2px; transition: all .15s;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── 골다공증 카드 ── */
+.osteo-list { padding: 16px 16px 120px; position: relative; z-index: 1; }
+.osteo-block {
+  background: var(--surface);
+  border: 2px solid var(--text);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  overflow: hidden;
+  animation: fadeUp .3s ease forwards;
+}
+.osteo-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.dday-chip {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  border: 1.5px solid;
+}
+.dday-urgent { background: rgba(217,48,37,0.12); color: #d93025; border-color: rgba(217,48,37,0.4); }
+.dday-soon   { background: rgba(217,119,6,0.12); color: #b45309; border-color: rgba(217,119,6,0.4); }
+.dday-ok     { background: rgba(11,158,124,0.1); color: #087a60; border-color: rgba(11,158,124,0.3); }
+.dday-none   { background: rgba(107,114,128,0.1); color: #6b7280; border-color: rgba(107,114,128,0.3); }
+.osteo-records { padding: 0; }
+.osteo-record-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+}
+.osteo-fab {
+  position: fixed; bottom: calc(24px + env(safe-area-inset-bottom));
+  right: 24px; z-index: 50;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #6366f1; color: #fff;
+  font-size: 28px; font-weight: 300;
+  border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  display: none;
+}
+.osteo-fab.visible { display: flex; align-items: center; justify-content: center; }
+
 </style>
 </head>
 <body>
@@ -541,8 +601,8 @@ body::before {
     <div class="app-bar-inner">
       <span class="app-title">
         <span class="dot"></span>
-        체중 감량 관리
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.0)</span>
+        비만·골다공증 클리닉
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v10.1)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -556,38 +616,78 @@ body::before {
     </div>
   </div>
 
-  <!-- 통계 -->
-  <div class="stats-row" id="statsRow">
-    <div class="stat-card">
-      <div class="stat-num" id="statTotal">0</div>
-      <div class="stat-lbl">전체 환자</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="statAvgLoss" style="color:var(--accent)">0%</div>
-      <div class="stat-lbl">평균 감량률</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="statBest" style="color:var(--gold)">0%</div>
-      <div class="stat-lbl">최고 감량률</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="statRecords" style="color:var(--accent3)">0</div>
-      <div class="stat-lbl">총 측정 건수</div>
-    </div>
+  <!-- 탭바 -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-weight" onclick="switchTab('weight')">⚖️ 체중감량</button>
+    <button class="tab-btn" id="tab-osteo" onclick="switchTab('osteo')">🦴 골다공증</button>
   </div>
 
-  <!-- 검색 -->
-  <div class="search-bar" style="display:flex;gap:8px;align-items:center">
-  <input class="search-input" id="searchInput" placeholder="🔍  이름 / 등록번호 검색..." oninput="render()" style="flex:1">
-  <span id="searchCount" style="font-size:12px;color:var(--text3);font-family:var(--mono);flex-shrink:0;display:none"></span>
-  <button id="btnEdit" onclick="toggleEditMode()" style="padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;flex-shrink:0">편집</button>
-</div>
+  <!-- ══ 체중감량 탭 ══ -->
+  <div class="tab-content active" id="tabContent-weight">
+    <!-- 통계 -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-num" id="statTotal">0</div>
+        <div class="stat-lbl">전체 환자</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statAvgLoss" style="color:var(--accent)">0%</div>
+        <div class="stat-lbl">평균 감량률</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statBest" style="color:var(--gold)">0%</div>
+        <div class="stat-lbl">최고 감량률</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statRecords" style="color:var(--accent3)">0</div>
+        <div class="stat-lbl">총 측정 건수</div>
+      </div>
+    </div>
+    <!-- 검색 -->
+    <div class="search-bar" style="display:flex;gap:8px;align-items:center">
+      <input class="search-input" id="searchInput" placeholder="🔍  이름 / 등록번호 검색..." oninput="render()" style="flex:1">
+      <span id="searchCount" style="font-size:12px;color:var(--text3);font-family:var(--mono);flex-shrink:0;display:none"></span>
+      <button id="btnEdit" onclick="toggleEditMode()" style="padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;flex-shrink:0">편집</button>
+    </div>
+    <!-- 환자 목록 -->
+    <div class="patient-list" id="patientList"></div>
+    <!-- FAB -->
+    <button class="fab" id="fabWeight" onclick="openPatientSheet(null)" aria-label="환자 추가">+</button>
+  </div>
 
-  <!-- 환자 목록 -->
-  <div class="patient-list" id="patientList"></div>
+  <!-- ══ 골다공증 탭 ══ -->
+  <div class="tab-content" id="tabContent-osteo">
+    <!-- 골다공증 통계 -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="osteoTotal">0</div>
+        <div class="stat-lbl">전체 환자</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="osteoUrgent" style="color:var(--danger)">0</div>
+        <div class="stat-lbl">주사 임박(1개월↓)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="osteoBmdDue" style="color:var(--gold)">0</div>
+        <div class="stat-lbl">BMD 임박(1개월↓)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="osteoRecords" style="color:var(--accent3)">0</div>
+        <div class="stat-lbl">총 기록 건수</div>
+      </div>
+    </div>
+    <!-- 검색 -->
+    <div class="search-bar" style="display:flex;gap:8px;align-items:center">
+      <input class="search-input" id="osteoSearchInput" placeholder="🔍  이름 / 등록번호 검색..." oninput="renderOsteo()" style="flex:1">
+      <span id="osteoSearchCount" style="font-size:12px;color:var(--text3);font-family:var(--mono);flex-shrink:0;display:none"></span>
+      <button id="btnOsteoEdit" onclick="toggleOsteoEditMode()" style="padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;flex-shrink:0">편집</button>
+    </div>
+    <!-- 골다공증 환자 목록 -->
+    <div class="osteo-list" id="osteoList"></div>
+    <!-- FAB -->
+    <button class="osteo-fab" id="fabOsteo" onclick="openOsteoPatientSheet(null)">+</button>
+  </div>
 
-  <!-- FAB -->
-  <button class="fab" onclick="openPatientSheet(null)" aria-label="환자 추가">+</button>
 </div>
 
 <!-- ════ 환자 등록/수정 시트 ════ -->
@@ -715,6 +815,93 @@ body::before {
     <div class="sheet-btns">
       <button class="btn-cancel" onclick="closeSheet('measureSheet')">취소</button>
       <button class="btn-save" onclick="saveMeasure()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 골다공증 환자 등록/수정 시트 ════ -->
+<div class="sheet-backdrop" id="osteoPatientSheet" onclick="onBackdropClick(event,'osteoPatientSheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="osteoPatientSheetTitle">골다공증 환자 등록</div>
+    <div class="sheet-body">
+      <input type="hidden" id="op_id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>등록번호 *</label>
+          <input type="text" id="op_regNo" placeholder="00000000" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label>성별</label>
+          <select id="op_gender">
+            <option value="">-</option>
+            <option value="남">남</option>
+            <option value="여">여</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>성명 *</label>
+          <input type="text" id="op_name" placeholder="홍길동님">
+        </div>
+        <div class="form-group">
+          <label>나이</label>
+          <input type="number" id="op_age" placeholder="65" inputmode="numeric">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>메모</label>
+        <textarea id="op_memo" placeholder="특이사항 등" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="sheet-btns">
+      <button class="btn-cancel" onclick="closeSheet('osteoPatientSheet')">취소</button>
+      <button class="btn-save" onclick="saveOsteoPatient()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 골다공증 기록 추가 시트 ════ -->
+<div class="sheet-backdrop" id="osteoRecordSheet" onclick="onBackdropClick(event,'osteoRecordSheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="osteoRecordSheetTitle">기록 추가</div>
+    <div class="sheet-body">
+      <input type="hidden" id="or_patientId">
+      <input type="hidden" id="or_recordId">
+      <div class="form-group">
+        <label>기록 종류 *</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="drug-select-btn" id="ortype-prolia" onclick="selectOsteoType('prolia')" style="flex:1">💉 프롤리아 주사</button>
+          <button class="drug-select-btn" id="ortype-bmd" onclick="selectOsteoType('bmd')" style="flex:1">🦴 BMD 검사</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>날짜 *</label>
+        <input type="date" id="or_date">
+      </div>
+      <!-- BMD 필드 (BMD 선택 시 표시) -->
+      <div id="or_bmdFields" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>요추 T-score</label>
+            <input type="number" id="or_lumbar" placeholder="-2.5" step="0.1" inputmode="decimal">
+          </div>
+          <div class="form-group">
+            <label>대퇴 T-score</label>
+            <input type="number" id="or_femur" placeholder="-1.8" step="0.1" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>메모</label>
+        <input type="text" id="or_memo" placeholder="특이사항">
+      </div>
+    </div>
+    <div class="sheet-btns">
+      <button class="btn-cancel" onclick="closeSheet('osteoRecordSheet')">취소</button>
+      <button class="btn-save" onclick="saveOsteoRecord()">저장</button>
     </div>
   </div>
 </div>
@@ -1412,6 +1599,288 @@ function updateDate() {
     `${d.getMonth()+1}/${d.getDate()} (${['일','월','화','수','목','금','토'][d.getDay()]})`;
 }
 updateDate();
+
+/* ══════════════════════════════════════════
+   골다공증 탭
+══════════════════════════════════════════ */
+const osteoDbRef = ref(db, 'osteo_patients');
+let osteoAll = [];
+let osteoNid = Date.now() + 1000000;
+let osteoEditMode = false;
+let currentOsteoType = '';
+
+// Firebase 연동
+onValue(osteoDbRef, snap => {
+  const data = snap.val();
+  osteoAll = (data && Array.isArray(data)) ? data : [];
+  renderOsteo();
+});
+async function persistOsteo() {
+  setSyncDot('syncing');
+  try { await set(osteoDbRef, osteoAll); setSyncDot('connected'); }
+  catch(e) { setSyncDot(''); toast('저장 실패'); }
+}
+
+/* ── 탭 전환 ── */
+window.switchTab = function(tab) {
+  ['weight','osteo'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tabContent-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab === 'osteo') {
+    document.getElementById('fabOsteo').classList.add('visible');
+    document.getElementById('fabWeight').style.display = 'none';
+  } else {
+    document.getElementById('fabOsteo').classList.remove('visible');
+    document.getElementById('fabWeight').style.display = '';
+  }
+};
+
+/* ── D-day 계산 ── */
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const diff = new Date(dateStr) - new Date(today());
+  return Math.ceil(diff / (1000*60*60*24));
+}
+function nextDate(dateStr, months) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().slice(0,10);
+}
+function ddayChip(dateStr, label) {
+  if (!dateStr) return '<span class="dday-chip dday-none">' + label + ': 미기록</span>';
+  const days = daysUntil(dateStr);
+  const cls = days < 0 ? 'dday-urgent' : days <= 30 ? 'dday-urgent' : days <= 60 ? 'dday-soon' : 'dday-ok';
+  const txt = days < 0 ? '⚠️ ' + Math.abs(days) + '일 초과' : days === 0 ? '🔴 오늘' : 'D-' + days;
+  return '<span class="dday-chip ' + cls + '">' + label + ' ' + txt + '</span>';
+}
+
+/* ── 골다공증 renderOsteo ── */
+window.renderOsteo = function() {
+  const query = (document.getElementById('osteoSearchInput')?.value || '').trim().toLowerCase();
+  const list = osteoAll.filter(p => {
+    if (!p || !p.name) return false;
+    if (!query) return true;
+    return p.name.toLowerCase().includes(query) || (p.regNo||'').toLowerCase().includes(query);
+  });
+
+  const countEl = document.getElementById('osteoSearchCount');
+  if (countEl) { countEl.textContent = list.length + '명'; countEl.style.display = query ? '' : 'none'; }
+
+  // 통계
+  let urgent = 0, bmdDue = 0, records = 0;
+  list.forEach(p => {
+    records += (p.records||[]).length;
+    const lastProlia = [...(p.records||[])].filter(r=>r.type==='prolia').sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+    const lastBmd    = [...(p.records||[])].filter(r=>r.type==='bmd').sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+    const nextProlia = nextDate(lastProlia?.date, 6);
+    const nextBmd    = nextDate(lastBmd?.date, 12);
+    if (nextProlia && daysUntil(nextProlia) <= 30) urgent++;
+    if (nextBmd    && daysUntil(nextBmd)    <= 30) bmdDue++;
+  });
+  document.getElementById('osteoTotal').textContent = list.length;
+  document.getElementById('osteoUrgent').textContent = urgent;
+  document.getElementById('osteoBmdDue').textContent = bmdDue;
+  document.getElementById('osteoRecords').textContent = records;
+
+  const el = document.getElementById('osteoList');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🦴</div><div class="empty-text">등록된 환자가 없습니다<br>아래 + 버튼으로 추가하세요</div></div>';
+    return;
+  }
+
+  // 다음 주사일 기준 정렬 (임박 순)
+  const sorted = [...list].sort((a, b) => {
+    const getNext = (p, type, months) => {
+      const last = [...(p.records||[])].filter(r=>r.type===type).sort((x,y)=>(y.date||'').localeCompare(x.date||''))[0];
+      return nextDate(last?.date, months) || '9999-99-99';
+    };
+    return getNext(a,'prolia',6).localeCompare(getNext(b,'prolia',6));
+  });
+
+  el.innerHTML = sorted.map(p => {
+    const proliaRecs = [...(p.records||[])].filter(r=>r.type==='prolia').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const bmdRecs    = [...(p.records||[])].filter(r=>r.type==='bmd').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const lastProlia = proliaRecs[0];
+    const lastBmd    = bmdRecs[0];
+    const nextProlia = nextDate(lastProlia?.date, 6);
+    const nextBmd    = nextDate(lastBmd?.date, 12);
+    const pDays = nextProlia ? daysUntil(nextProlia) : null;
+    const blockBorder = pDays !== null && pDays <= 30 ? 'border-color:rgba(217,48,37,0.5);border-width:2px' : '';
+
+    var html = '<div class="osteo-block" style="' + blockBorder + '">';
+    // 헤더
+    html += '<div class="osteo-header">';
+    html += '<span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0">' + (p.regNo||'—') + '</span>';
+    html += '<span style="font-size:15px;font-weight:700;flex:1">' + p.name + '</span>';
+    if (p.gender) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.gender + '</span>';
+    if (p.age) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.age + '세</span>';
+    html += '<div onclick="event.stopPropagation()" style="display:flex;gap:4px;flex-shrink:0">';
+    if (osteoEditMode) {
+      html += '<button class="btn-sm danger" onclick="askDelOsteoPatient(' + p.id + ')">삭제</button>';
+    } else {
+      html += '<button class="btn-sm" onclick="openOsteoPatientSheet(' + p.id + ')">수정</button>';
+    }
+    html += '</div></div>';
+
+    // D-day 뱃지 행
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--border)">';
+    html += ddayChip(nextProlia, '💉프롤리아');
+    html += ddayChip(nextBmd, '🦴BMD');
+    if (lastProlia) html += '<span style="font-size:11px;color:var(--text3)">최근주사: ' + fmtDate(lastProlia.date) + '</span>';
+    if (lastBmd)    html += '<span style="font-size:11px;color:var(--text3)">최근BMD: ' + fmtDate(lastBmd.date) + '</span>';
+    html += '</div>';
+
+    // 기록 목록
+    if (p.records && p.records.length) {
+      var sortedRecs = [...p.records].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      sortedRecs.forEach(function(r) {
+        var typeLabel = r.type === 'prolia' ? '💉 프롤리아' : '🦴 BMD';
+        var extra = '';
+        if (r.type === 'bmd') {
+          if (r.lumbar) extra += ' L' + r.lumbar;
+          if (r.femur)  extra += ' F' + r.femur;
+        }
+        html += '<div class="osteo-record-row">';
+        html += '<span style="font-size:11px;color:var(--text3);font-family:var(--mono);flex-shrink:0">' + fmtDate(r.date) + '</span>';
+        html += '<span style="font-size:12px;font-weight:700;color:' + (r.type==='prolia'?'#6366f1':'#0b9e7c') + ';flex:1">' + typeLabel + extra + '</span>';
+        if (r.memo) html += '<span style="font-size:11px;color:var(--text3)">' + r.memo + '</span>';
+        html += '<div style="display:flex;gap:4px;flex-shrink:0">';
+        html += '<button class="btn-sm" onclick="openOsteoRecordSheet(' + p.id + ',\'' + r.id + '\')">수정</button>';
+        html += '<button class="btn-sm danger" onclick="askDelOsteoRecord(' + p.id + ',\'' + r.id + '\')">삭제</button>';
+        html += '</div></div>';
+      });
+    }
+
+    // 기록 추가 버튼
+    html += '<div style="padding:10px 14px">';
+    html += '<button class="btn-sm" style="border-color:var(--accent);color:var(--accent);width:100%" onclick="openOsteoRecordSheet(' + p.id + ',null)">+ 기록 추가</button>';
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+  }).join('');
+};
+
+/* ── 골다공증 환자 CRUD ── */
+window.openOsteoPatientSheet = function(id) {
+  document.getElementById('osteoPatientSheetTitle').textContent = id ? '환자 수정' : '골다공증 환자 등록';
+  document.getElementById('op_id').value = id || '';
+  if (id) {
+    const p = osteoAll.find(x => x.id === id);
+    document.getElementById('op_regNo').value = p.regNo || '';
+    document.getElementById('op_name').value = p.name || '';
+    document.getElementById('op_age').value = p.age || '';
+    document.getElementById('op_gender').value = p.gender || '';
+    document.getElementById('op_memo').value = p.memo || '';
+  } else {
+    ['op_regNo','op_name','op_age','op_memo'].forEach(f => document.getElementById(f).value = '');
+    document.getElementById('op_gender').value = '';
+  }
+  document.getElementById('osteoPatientSheet').classList.add('open');
+};
+window.saveOsteoPatient = function() {
+  const name = document.getElementById('op_name').value.trim();
+  if (!name) { alert('성명을 입력하세요.'); return; }
+  const fid = document.getElementById('op_id').value;
+  const data = {
+    regNo: document.getElementById('op_regNo').value.trim(),
+    name,
+    age: parseInt(document.getElementById('op_age').value) || null,
+    gender: document.getElementById('op_gender').value,
+    memo: document.getElementById('op_memo').value.trim(),
+  };
+  if (fid) {
+    const idx = osteoAll.findIndex(x => x.id == fid);
+    if (idx >= 0) osteoAll[idx] = { ...osteoAll[idx], ...data };
+    toast('수정되었습니다');
+  } else {
+    osteoAll.push({ id: osteoNid++, records: [], ...data });
+    toast('등록되었습니다');
+  }
+  persistOsteo(); closeSheet('osteoPatientSheet');
+};
+window.askDelOsteoPatient = function(id) {
+  document.getElementById('confirmTitle').textContent = '환자 삭제';
+  document.getElementById('confirmMsg').textContent = '이 환자와 모든 기록을 삭제합니다.';
+  confirmCb = () => { osteoAll = osteoAll.filter(x => x.id !== id); persistOsteo(); toast('삭제되었습니다'); };
+  document.getElementById('confirmBackdrop').classList.add('open');
+};
+window.toggleOsteoEditMode = function() {
+  osteoEditMode = !osteoEditMode;
+  const btn = document.getElementById('btnOsteoEdit');
+  btn.textContent = osteoEditMode ? '완료' : '편집';
+  btn.style.color = osteoEditMode ? '#d93025' : '';
+  btn.style.borderColor = osteoEditMode ? '#d93025' : '';
+  renderOsteo();
+};
+
+/* ── 골다공증 기록 CRUD ── */
+window.selectOsteoType = function(type) {
+  currentOsteoType = type;
+  ['prolia','bmd'].forEach(t => {
+    document.getElementById('ortype-'+t).classList.toggle('selected', t===type);
+  });
+  document.getElementById('or_bmdFields').style.display = type === 'bmd' ? '' : 'none';
+};
+window.openOsteoRecordSheet = function(patientId, recordId) {
+  document.getElementById('or_patientId').value = patientId;
+  document.getElementById('or_recordId').value = recordId || '';
+  currentOsteoType = '';
+  ['prolia','bmd'].forEach(t => document.getElementById('ortype-'+t).classList.remove('selected'));
+  document.getElementById('or_bmdFields').style.display = 'none';
+  document.getElementById('or_date').value = today();
+  ['or_lumbar','or_femur','or_memo'].forEach(f => document.getElementById(f).value = '');
+
+  if (recordId) {
+    const p = osteoAll.find(x => x.id === patientId);
+    const r = (p?.records||[]).find(x => x.id === recordId);
+    if (r) {
+      selectOsteoType(r.type);
+      document.getElementById('or_date').value = r.date || today();
+      if (r.lumbar) document.getElementById('or_lumbar').value = r.lumbar;
+      if (r.femur)  document.getElementById('or_femur').value = r.femur;
+      document.getElementById('or_memo').value = r.memo || '';
+    }
+  }
+  const p = osteoAll.find(x => x.id === patientId);
+  document.getElementById('osteoRecordSheetTitle').textContent = (p ? p.name + ' — ' : '') + (recordId ? '기록 수정' : '기록 추가');
+  document.getElementById('osteoRecordSheet').classList.add('open');
+};
+window.saveOsteoRecord = function() {
+  if (!currentOsteoType) { alert('기록 종류를 선택하세요.'); return; }
+  const date = document.getElementById('or_date').value;
+  if (!date) { alert('날짜를 입력하세요.'); return; }
+  const patientId = parseInt(document.getElementById('or_patientId').value);
+  const recordId  = document.getElementById('or_recordId').value;
+  const pIdx = osteoAll.findIndex(x => x.id === patientId);
+  if (pIdx < 0) return;
+  if (!osteoAll[pIdx].records) osteoAll[pIdx].records = [];
+  const data = {
+    type: currentOsteoType, date,
+    lumbar: parseFloat(document.getElementById('or_lumbar').value) || null,
+    femur:  parseFloat(document.getElementById('or_femur').value)  || null,
+    memo: document.getElementById('or_memo').value.trim(),
+  };
+  if (recordId) {
+    const rIdx = osteoAll[pIdx].records.findIndex(x => x.id === recordId);
+    if (rIdx >= 0) osteoAll[pIdx].records[rIdx] = { ...osteoAll[pIdx].records[rIdx], ...data };
+  } else {
+    osteoAll[pIdx].records.push({ id: 'r' + Date.now(), ...data });
+  }
+  persistOsteo(); closeSheet('osteoRecordSheet'); toast('저장되었습니다');
+};
+window.askDelOsteoRecord = function(patientId, recordId) {
+  document.getElementById('confirmTitle').textContent = '기록 삭제';
+  document.getElementById('confirmMsg').textContent = '이 기록을 삭제합니다.';
+  confirmCb = () => {
+    const pIdx = osteoAll.findIndex(x => x.id === patientId);
+    if (pIdx >= 0) osteoAll[pIdx].records = (osteoAll[pIdx].records||[]).filter(r => r.id !== recordId);
+    persistOsteo(); toast('삭제되었습니다');
+  };
+  document.getElementById('confirmBackdrop').classList.add('open');
+};
 
 /* ── 샘플 데이터 ── */
 const SAMPLE_DATA = [];
