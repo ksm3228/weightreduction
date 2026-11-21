@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.3)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.4)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1806,7 +1806,13 @@ window.renderOsteo = function() {
 
     // 기록 목록 (오래된 순)
     if (p.records && p.records.length) {
-      var sortedRecs = [...p.records].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+      var sortedRecs = [...p.records].sort((a,b)=>{
+        var dc = (a.date||'').localeCompare(b.date||'');
+        if (dc !== 0) return dc;
+        // 같은 날: prolia(0) → bmd(1)
+        var order = {prolia:0, bmd:1};
+        return (order[a.type]||0) - (order[b.type]||0);
+      });
       sortedRecs.forEach(function(r) {
         var typeLabel = r.type === 'prolia' ? '💉 프롤리아' : '🦴 BMD';
         var extra = '';
