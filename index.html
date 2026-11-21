@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.0)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.1)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -886,11 +886,25 @@ body::before {
         <div class="form-row">
           <div class="form-group">
             <label>요추 T-score</label>
-            <input type="number" id="or_lumbar" placeholder="-2.5" step="0.1" inputmode="decimal">
+            <div style="position:relative">
+              <input type="text" id="or_lumbar" placeholder="-2.5" inputmode="decimal"
+                onclick="openTscorePicker('or_lumbar')" readonly
+                style="cursor:pointer;background:var(--surface2)">
+              <input type="text" id="or_lumbar_manual" placeholder="-2.5" inputmode="decimal"
+                style="display:none" oninput="syncTscore('or_lumbar')">
+            </div>
+            <div id="or_lumbar_picker" style="display:none"></div>
           </div>
           <div class="form-group">
             <label>대퇴 T-score</label>
-            <input type="number" id="or_femur" placeholder="-1.8" step="0.1" inputmode="decimal">
+            <div style="position:relative">
+              <input type="text" id="or_femur" placeholder="-1.8" inputmode="decimal"
+                onclick="openTscorePicker('or_femur')" readonly
+                style="cursor:pointer;background:var(--surface2)">
+              <input type="text" id="or_femur_manual" placeholder="-1.8" inputmode="decimal"
+                style="display:none" oninput="syncTscore('or_femur')">
+            </div>
+            <div id="or_femur_picker" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -1890,6 +1904,8 @@ window.openOsteoRecordSheet = function(patientId, recordId) {
   document.getElementById('or_bmdFields').style.display = 'none';
   document.getElementById('or_date').value = today();
   ['or_lumbar','or_femur','or_memo'].forEach(f => document.getElementById(f).value = '');
+  ['or_lumbar_manual','or_femur_manual'].forEach(f => { const el=document.getElementById(f); if(el){el.value='';el.style.display='none';} });
+  ['or_lumbar','or_femur'].forEach(f => { const el=document.getElementById(f); if(el){el.style.display='';el.style.cursor='pointer';el.style.background='var(--surface2)';} });
 
   if (recordId) {
     const p = osteoAll.find(x => x.id === patientId);
@@ -1906,6 +1922,53 @@ window.openOsteoRecordSheet = function(patientId, recordId) {
   document.getElementById('osteoRecordSheetTitle').textContent = (p ? p.name + ' — ' : '') + (recordId ? '기록 수정' : '기록 추가');
   document.getElementById('osteoRecordSheet').classList.add('open');
 };
+/* ── T-score 피커 ── */
+var TSCORE_OPTS = [];
+for (var _t = -1.0; _t >= -3.5; _t = Math.round((_t - 0.5) * 10) / 10) {
+  TSCORE_OPTS.push(_t.toFixed(1));
+}
+
+window.openTscorePicker = function(fieldId) {
+  var picker = document.getElementById(fieldId + '_picker');
+  var allPickers = document.querySelectorAll('[id$="_picker"]');
+  allPickers.forEach(function(p) { if (p.id !== fieldId + '_picker') p.style.display = 'none'; });
+  if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+
+  var cur = document.getElementById(fieldId).value;
+  var html = '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;margin-top:4px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:100;position:relative">';
+  TSCORE_OPTS.forEach(function(v) {
+    var sel = cur === v ? 'background:rgba(11,158,124,0.12);color:#087a60;font-weight:700' : '';
+    html += '<div style="padding:11px 16px;font-size:15px;cursor:pointer;border-bottom:1px solid var(--border);' + sel + '" onclick="selectTscore(\'' + fieldId + '\',\'' + v + '\')">' + v + '</div>';
+  });
+  html += '<div style="padding:11px 16px;font-size:14px;color:var(--accent);cursor:pointer;font-weight:600" onclick="switchToManual(\'' + fieldId + '\')">✏️ 직접 입력</div>';
+  html += '</div>';
+  picker.innerHTML = html;
+  picker.style.display = 'block';
+};
+
+window.selectTscore = function(fieldId, val) {
+  document.getElementById(fieldId).value = val;
+  document.getElementById(fieldId + '_picker').style.display = 'none';
+};
+
+window.switchToManual = function(fieldId) {
+  document.getElementById(fieldId + '_picker').style.display = 'none';
+  var display = document.getElementById(fieldId);
+  var manual = document.getElementById(fieldId + '_manual');
+  display.style.display = 'none';
+  manual.style.display = '';
+  manual.value = display.value;
+  manual.focus();
+};
+
+window.syncTscore = function(fieldId) {
+  var manual = document.getElementById(fieldId + '_manual');
+  var display = document.getElementById(fieldId);
+  var v = manual.value;
+  // 범위 내(-1.0~-3.5)면 display 동기화, 아닌 경우도 허용(수기)
+  display.value = v;
+};
+
 window.saveOsteoRecord = function() {
   if (!currentOsteoType) { alert('기록 종류를 선택하세요.'); return; }
   const date = document.getElementById('or_date').value;
@@ -1917,8 +1980,8 @@ window.saveOsteoRecord = function() {
   if (!osteoAll[pIdx].records) osteoAll[pIdx].records = [];
   const data = {
     type: currentOsteoType, date,
-    lumbar: parseFloat(document.getElementById('or_lumbar').value) || null,
-    femur:  parseFloat(document.getElementById('or_femur').value)  || null,
+    lumbar: parseFloat(document.getElementById('or_lumbar').value || document.getElementById('or_lumbar_manual').value) || null,
+    femur:  parseFloat(document.getElementById('or_femur').value  || document.getElementById('or_femur_manual').value)  || null,
     memo: document.getElementById('or_memo').value.trim(),
   };
   if (recordId) {
