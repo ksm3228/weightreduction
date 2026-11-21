@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.2)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.3)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1833,6 +1833,18 @@ window.renderOsteo = function() {
         html += '<button class="btn-sm" onclick="openOsteoRecordSheet(' + p.id + ',\'' + r.id + '\')">수정</button>';
         html += '<button class="btn-sm danger" onclick="askDelOsteoRecord(' + p.id + ',\'' + r.id + '\')">삭제</button>';
         html += '</div></div>';
+        // BMD면 다음 예정일 표시
+        if (r.type === 'bmd' && r.date) {
+          var nxt = nextDate(r.date, 12);
+          var nd = daysUntil(nxt);
+          var nc = nd < 0 ? '#d93025' : nd <= 30 ? '#d93025' : nd <= 60 ? '#b45309' : '#6b7280';
+          var ntxt = nd < 0 ? '⚠️ ' + Math.abs(nd) + '일 초과' : nd === 0 ? '오늘' : 'D-' + nd;
+          html += '<div style="padding:4px 14px 8px 14px;display:flex;align-items:center;gap:6px">';
+          html += '<span style="font-size:10px;color:var(--text3)">📅 다음BMD예정</span>';
+          html += '<span style="font-size:12px;font-weight:700;color:' + nc + ';font-family:var(--mono)">' + fmtDate(nxt) + '</span>';
+          html += '<span style="font-size:10px;font-weight:600;color:' + nc + ';background:rgba(0,0,0,0.05);border-radius:4px;padding:1px 5px">' + ntxt + '</span>';
+          html += '</div>';
+        }
       });
     }
 
