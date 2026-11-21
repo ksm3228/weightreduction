@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.1)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.2)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1814,9 +1814,20 @@ window.renderOsteo = function() {
           if (r.lumbar) extra += ' L' + r.lumbar;
           if (r.femur)  extra += ' F' + r.femur;
         }
+        // 추가 1년 급여 조건: BMD이고 요추 또는 대퇴 T-score가 -2.5 초과 ~ -2.0 이하
+        var extraBadge = '';
+        if (r.type === 'bmd') {
+          var l = parseFloat(r.lumbar), f = parseFloat(r.femur);
+          var lCond = !isNaN(l) && l > -2.5 && l <= -2.0;
+          var fCond = !isNaN(f) && f > -2.5 && f <= -2.0;
+          if (lCond || fCond) {
+            extraBadge = '<span style="font-size:10px;font-weight:700;color:#b45309;background:rgba(217,119,6,0.12);border:1px solid rgba(217,119,6,0.3);border-radius:4px;padding:1px 5px;flex-shrink:0">추가 1년 급여</span>';
+          }
+        }
         html += '<div class="osteo-record-row">';
         html += '<span style="font-size:11px;color:var(--text3);font-family:var(--mono);flex-shrink:0">' + fmtDate(r.date) + '</span>';
         html += '<span style="font-size:12px;font-weight:700;color:' + (r.type==='prolia'?'#6366f1':'#0b9e7c') + ';flex:1">' + typeLabel + extra + '</span>';
+        if (extraBadge) html += extraBadge;
         if (r.memo) html += '<span style="font-size:11px;color:var(--text3)">' + r.memo + '</span>';
         html += '<div style="display:flex;gap:4px;flex-shrink:0">';
         html += '<button class="btn-sm" onclick="openOsteoRecordSheet(' + p.id + ',\'' + r.id + '\')">수정</button>';
