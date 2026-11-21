@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.8)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.9)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1986,8 +1986,14 @@ window.openOsteoRecordSheet = function(patientId, recordId) {
 };
 /* ── T-score 피커 ── */
 var TSCORE_OPTS = [];
-for (var _t = -1.0; _t >= -3.5; _t = Math.round((_t - 0.5) * 10) / 10) {
+for (var _t = -1.0; _t > -2.0; _t = Math.round((_t - 0.5) * 10) / 10) {
   TSCORE_OPTS.push(_t.toFixed(1));
+}
+for (var _t2 = -2.0; _t2 >= -3.0; _t2 = Math.round((_t2 - 0.1) * 10) / 10) {
+  TSCORE_OPTS.push(_t2.toFixed(1));
+}
+for (var _t3 = -3.5; _t3 >= -3.5; _t3 = Math.round((_t3 - 0.5) * 10) / 10) {
+  TSCORE_OPTS.push(_t3.toFixed(1));
 }
 
 window.openTscorePicker = function(fieldId) {
