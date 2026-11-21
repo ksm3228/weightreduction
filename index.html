@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.6)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.7)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1758,34 +1758,27 @@ window.renderOsteo = function() {
     }
     html += '</div></div>';
 
-    // 프롤리아 / BMD 통합 박스 (D-day 칩+바+날짜 모두 각 박스 안)
+    // 프롤리아 / BMD 요약 박스 (접기/펼치기, 기본 접힘)
     var dateFont = '"Apple SD Gothic Neo","Malgun Gothic","나눔고딕",sans-serif';
     var pElapsed = nextProlia && lastProlia ? Math.min(100, Math.max(0, Math.round((180 - (pDays||0)) / 180 * 100))) : null;
     var bElapsed = nextBmd    && lastBmd    ? Math.min(100, Math.max(0, Math.round((365 - (bDays||0)) / 365 * 100))) : null;
+    var summaryId = 'osummary_' + p.id;
 
-    html += '<div style="padding:10px 14px;border-bottom:1px solid var(--border)">';
+    // 토글 헤더 (항상 보임) — 한 줄 요약: BMD D-day | 프롤리아 D-day
+    html += '<div style="padding:7px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer" onclick="(function(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';var arr=document.getElementById(\'arr_' + p.id + '\');arr.style.transform=el.style.display===\'none\'?\'rotate(0deg)\':\' rotate(180deg)\'})(document.getElementById(\'' + summaryId + '\'))">';
+    html += '<span style="font-size:11px;color:var(--text3)">🦴</span>';
+    html += '<span style="font-size:12px;font-weight:700;color:' + bDaysCls + '">' + dDayText(bDays) + '</span>';
+    html += '<span style="font-size:10px;color:var(--text3)">|</span>';
+    html += '<span style="font-size:11px;color:var(--text3)">💉</span>';
+    html += '<span style="font-size:12px;font-weight:700;color:' + pDaysCls + '">' + dDayText(pDays) + '</span>';
+    html += '<span id="arr_' + p.id + '" style="margin-left:auto;font-size:12px;color:var(--text3);transition:transform 0.2s">▼</span>';
+    html += '</div>';
+
+    // 펼쳐지는 상세 박스 (기본 숨김)
+    html += '<div id="' + summaryId + '" style="display:none;padding:10px 14px;border-bottom:1px solid var(--border)">';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
 
-    // 💉 프롤리아 박스
-    html += '<div style="border:1.5px solid rgba(99,102,241,0.3);border-radius:10px;padding:10px 11px;background:rgba(99,102,241,0.04)">';
-    html += '<div style="font-size:12px;font-weight:700;color:#6366f1;margin-bottom:7px">💉 프롤리아</div>';
-    // D-day 칩
-    html += '<div style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(99,102,241,0.12);color:' + (pDays !== null && pDays <= 60 ? pDaysCls : '#6366f1') + ';margin-bottom:5px">' + dDayText(pDays) + '</div>';
-    // 경과 바
-    if (pElapsed !== null) {
-      html += '<div style="width:100%;height:5px;background:rgba(0,0,0,0.08);border-radius:3px;overflow:hidden;margin-bottom:2px">';
-      html += '<div style="width:' + pElapsed + '%;height:100%;background:' + pDaysCls + ';border-radius:3px"></div></div>';
-      html += '<div style="font-size:10px;color:var(--text3);text-align:right;margin-bottom:7px">' + pElapsed + '% 경과</div>';
-    } else { html += '<div style="margin-bottom:7px"></div>'; }
-    // 날짜
-    html += '<div style="display:flex;flex-direction:column;gap:4px">';
-    html += '<div><div style="font-size:10px;color:var(--text3)">최근주사</div>';
-    html += '<div style="font-size:15px;font-weight:800;color:var(--text1);font-family:' + dateFont + ';letter-spacing:-0.02em">' + (lastProlia ? fmtDate(lastProlia.date) : '—') + '</div></div>';
-    html += '<div><div style="font-size:10px;color:var(--text3)">다음예정</div>';
-    html += '<div style="font-size:15px;font-weight:800;color:' + pDaysCls + ';font-family:' + dateFont + ';letter-spacing:-0.02em">' + (nextProlia ? fmtDate(nextProlia) : '—') + '</div></div>';
-    html += '</div></div>';
-
-    // 🦴 BMD 박스
+    // 🦴 BMD 박스 (좌측)
     html += '<div style="border:1.5px solid rgba(11,158,124,0.3);border-radius:10px;padding:10px 11px;background:rgba(11,158,124,0.04)">';
     html += '<div style="font-size:12px;font-weight:700;color:#087a60;margin-bottom:7px">🦴 BMD</div>';
     html += '<div style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(11,158,124,0.12);color:' + (bDays !== null && bDays <= 60 ? bDaysCls : '#087a60') + ';margin-bottom:5px">' + dDayText(bDays) + '</div>';
@@ -1799,6 +1792,22 @@ window.renderOsteo = function() {
     html += '<div style="font-size:15px;font-weight:800;color:var(--text1);font-family:' + dateFont + ';letter-spacing:-0.02em">' + (lastBmd ? fmtDate(lastBmd.date) : '—') + '</div></div>';
     html += '<div><div style="font-size:10px;color:var(--text3)">다음예정</div>';
     html += '<div style="font-size:15px;font-weight:800;color:' + bDaysCls + ';font-family:' + dateFont + ';letter-spacing:-0.02em">' + (nextBmd ? fmtDate(nextBmd) : '—') + '</div></div>';
+    html += '</div></div>';
+
+    // 💉 프롤리아 박스 (우측)
+    html += '<div style="border:1.5px solid rgba(99,102,241,0.3);border-radius:10px;padding:10px 11px;background:rgba(99,102,241,0.04)">';
+    html += '<div style="font-size:12px;font-weight:700;color:#6366f1;margin-bottom:7px">💉 프롤리아</div>';
+    html += '<div style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(99,102,241,0.12);color:' + (pDays !== null && pDays <= 60 ? pDaysCls : '#6366f1') + ';margin-bottom:5px">' + dDayText(pDays) + '</div>';
+    if (pElapsed !== null) {
+      html += '<div style="width:100%;height:5px;background:rgba(0,0,0,0.08);border-radius:3px;overflow:hidden;margin-bottom:2px">';
+      html += '<div style="width:' + pElapsed + '%;height:100%;background:' + pDaysCls + ';border-radius:3px"></div></div>';
+      html += '<div style="font-size:10px;color:var(--text3);text-align:right;margin-bottom:7px">' + pElapsed + '% 경과</div>';
+    } else { html += '<div style="margin-bottom:7px"></div>'; }
+    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+    html += '<div><div style="font-size:10px;color:var(--text3)">최근주사</div>';
+    html += '<div style="font-size:15px;font-weight:800;color:var(--text1);font-family:' + dateFont + ';letter-spacing:-0.02em">' + (lastProlia ? fmtDate(lastProlia.date) : '—') + '</div></div>';
+    html += '<div><div style="font-size:10px;color:var(--text3)">다음예정</div>';
+    html += '<div style="font-size:15px;font-weight:800;color:' + pDaysCls + ';font-family:' + dateFont + ';letter-spacing:-0.02em">' + (nextProlia ? fmtDate(nextProlia) : '—') + '</div></div>';
     html += '</div></div>';
 
     html += '</div>';
