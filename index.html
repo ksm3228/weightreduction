@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.5)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.6)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1813,22 +1813,35 @@ window.renderOsteo = function() {
         var order = {prolia:0, bmd:1};
         return (order[a.type]||0) - (order[b.type]||0);
       });
-      // 마지막 BMD 기준 다음 예정일 행 삽입: 날짜 순 정렬 위치에 맞게
-      var bmdNextDate = nextBmd; // already computed above (lastBmd + 12months)
+      // 마지막 프롤리아/BMD 기준 다음 예정일 행: 날짜 순 위치에 삽입
+      var proliaNextDate = nextProlia;
+      var bmdNextDate = nextBmd;
+      var proliaNextInserted = false;
       var bmdNextInserted = false;
+
+      function insertNextRow(dateStr, label, bgColor, borderColor) {
+        var nd = daysUntil(dateStr);
+        var nc = nd < 0 ? '#d93025' : nd <= 30 ? '#d93025' : nd <= 60 ? '#b45309' : '#6b7280';
+        var ntxt = nd < 0 ? '⚠️ ' + Math.abs(nd) + '일 초과' : nd === 0 ? '오늘' : 'D-' + nd;
+        return '<div style="padding:5px 14px;display:flex;align-items:center;gap:6px;background:' + bgColor + ';border-left:3px solid ' + borderColor + '">'
+          + '<span style="font-size:10px;color:var(--text3)">📅 ' + label + '</span>'
+          + '<span style="font-size:12px;font-weight:700;color:' + nc + ';font-family:var(--mono)">' + fmtDate(dateStr) + '</span>'
+          + '<span style="font-size:10px;font-weight:600;color:' + nc + ';background:rgba(0,0,0,0.05);border-radius:4px;padding:1px 5px">' + ntxt + '</span>'
+          + '</div>';
+      }
+
       sortedRecs.forEach(function(r) {
-        // 다음BMD예정 행 삽입: nextBmd가 있고, 현재 행 날짜 > nextBmd인 첫 순간 직전에 삽입
+        // 프롤리아 다음예정 삽입 위치
+        if (proliaNextDate && !proliaNextInserted && (r.date||'') > proliaNextDate) {
+          proliaNextInserted = true;
+          html += insertNextRow(proliaNextDate, '다음프롤리아예정', 'rgba(99,102,241,0.04)', 'rgba(99,102,241,0.4)');
+        }
+        // BMD 다음예정 삽입 위치
         if (bmdNextDate && !bmdNextInserted && (r.date||'') > bmdNextDate) {
           bmdNextInserted = true;
-          var nd = daysUntil(bmdNextDate);
-          var nc = nd < 0 ? '#d93025' : nd <= 30 ? '#d93025' : nd <= 60 ? '#b45309' : '#6b7280';
-          var ntxt = nd < 0 ? '⚠️ ' + Math.abs(nd) + '일 초과' : nd === 0 ? '오늘' : 'D-' + nd;
-          html += '<div style="padding:5px 14px;display:flex;align-items:center;gap:6px;background:rgba(11,158,124,0.04);border-left:3px solid rgba(11,158,124,0.4)">';
-          html += '<span style="font-size:10px;color:var(--text3)">📅 다음BMD예정</span>';
-          html += '<span style="font-size:12px;font-weight:700;color:' + nc + ';font-family:var(--mono)">' + fmtDate(bmdNextDate) + '</span>';
-          html += '<span style="font-size:10px;font-weight:600;color:' + nc + ';background:rgba(0,0,0,0.05);border-radius:4px;padding:1px 5px">' + ntxt + '</span>';
-          html += '</div>';
+          html += insertNextRow(bmdNextDate, '다음BMD예정', 'rgba(11,158,124,0.04)', 'rgba(11,158,124,0.4)');
         }
+
         var typeLabel = r.type === 'prolia' ? '💉 프롤리아' : '🦴 BMD';
         var extra = '';
         if (r.type === 'bmd') {
@@ -1844,7 +1857,11 @@ window.renderOsteo = function() {
             extraBadge = '<span style="font-size:10px;font-weight:700;color:#b45309;background:rgba(217,119,6,0.12);border:1px solid rgba(217,119,6,0.3);border-radius:4px;padding:1px 5px;flex-shrink:0">추가 1년 급여</span>';
           }
         }
-        html += '<div class="osteo-record-row">';
+        // BMD 행은 테두리로 구분
+        var rowStyle = r.type === 'bmd'
+          ? 'border-left:3px solid rgba(11,158,124,0.5);background:rgba(11,158,124,0.03);margin:0 8px;border-radius:0 6px 6px 0'
+          : '';
+        html += '<div class="osteo-record-row" style="' + rowStyle + '">';
         html += '<span style="font-size:11px;color:var(--text3);font-family:var(--mono);flex-shrink:0">' + fmtDate(r.date) + '</span>';
         html += '<span style="font-size:12px;font-weight:700;color:' + (r.type==='prolia'?'#6366f1':'#0b9e7c') + ';flex:1">' + typeLabel + extra + '</span>';
         if (extraBadge) html += extraBadge;
@@ -1854,17 +1871,11 @@ window.renderOsteo = function() {
         html += '<button class="btn-sm danger" onclick="askDelOsteoRecord(' + p.id + ',\'' + r.id + '\')">삭제</button>';
         html += '</div></div>';
       });
-      // 루프 끝까지 삽입 안됐으면 (nextBmd가 모든 기록보다 미래) 맨 아래에 삽입
-      if (bmdNextDate && !bmdNextInserted) {
-        var nd = daysUntil(bmdNextDate);
-        var nc = nd < 0 ? '#d93025' : nd <= 30 ? '#d93025' : nd <= 60 ? '#b45309' : '#6b7280';
-        var ntxt = nd < 0 ? '⚠️ ' + Math.abs(nd) + '일 초과' : nd === 0 ? '오늘' : 'D-' + nd;
-        html += '<div style="padding:5px 14px;display:flex;align-items:center;gap:6px;background:rgba(11,158,124,0.04);border-left:3px solid rgba(11,158,124,0.4)">';
-        html += '<span style="font-size:10px;color:var(--text3)">📅 다음BMD예정</span>';
-        html += '<span style="font-size:12px;font-weight:700;color:' + nc + ';font-family:var(--mono)">' + fmtDate(bmdNextDate) + '</span>';
-        html += '<span style="font-size:10px;font-weight:600;color:' + nc + ';background:rgba(0,0,0,0.05);border-radius:4px;padding:1px 5px">' + ntxt + '</span>';
-        html += '</div>';
-      }
+      // 루프 후 삽입 안된 예정일 → 맨 아래
+      if (proliaNextDate && !proliaNextInserted)
+        html += insertNextRow(proliaNextDate, '다음프롤리아예정', 'rgba(99,102,241,0.04)', 'rgba(99,102,241,0.4)');
+      if (bmdNextDate && !bmdNextInserted)
+        html += insertNextRow(bmdNextDate, '다음BMD예정', 'rgba(11,158,124,0.04)', 'rgba(11,158,124,0.4)');
     }
 
     // 기록 추가 버튼
