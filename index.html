@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.30)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.31)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1900,8 +1900,11 @@ window.renderOsteo = function() {
     const nextProlia  = nextDate(lastProlia?.date, 6);
     const nextEvenity = nextDate(lastEvenity?.date, 1);
     const nextBmd     = nextDate(lastBmd?.date, 12);
+    // 이베니티 이후 프롤리아 접종이 있으면 이베니티 예정일 숨김
+    const proliaAfterEvenity = lastEvenity && lastProlia && (lastProlia.date||'') >= (lastEvenity.date||'');
+    const showEvenityNext = lastEvenity && !proliaAfterEvenity;
     const pDays  = nextProlia  ? daysUntil(nextProlia)  : null;
-    const eDays  = nextEvenity ? daysUntil(nextEvenity) : null;
+    const eDays  = (showEvenityNext && nextEvenity) ? daysUntil(nextEvenity) : null;
     const bDays  = nextBmd     ? daysUntil(nextBmd)     : null;
     // 임박 판단: 프롤리아 또는 이베니티 중 더 임박한 것
     const injDays = (pDays !== null && eDays !== null) ? Math.min(pDays, eDays) : (pDays ?? eDays);
@@ -2049,8 +2052,8 @@ window.renderOsteo = function() {
       html += '</div></div>';
     }
 
-    // 💊 이베니티 박스 (이베니티 기록 있을 때)
-    if (lastEvenity) {
+    // 💊 이베니티 박스 (이베니티 이후 프롤리아 없을 때만)
+    if (showEvenityNext) {
       html += '<div style="border:1.5px solid rgba(168,85,247,0.3);border-radius:10px;padding:10px 11px;background:rgba(168,85,247,0.04)">';
       html += '<div style="font-size:12px;font-weight:700;color:#9333ea;margin-bottom:7px">💊 이베니티</div>';
       html += '<div style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(168,85,247,0.12);color:' + (eDays !== null && eDays <= 14 ? eDaysCls : '#9333ea') + ';margin-bottom:5px">' + dDayText(eDays) + '</div>';
@@ -2081,7 +2084,7 @@ window.renderOsteo = function() {
       });
       // 마지막 프롤리아/이베니티/BMD 기준 다음 예정일 행: 날짜 순 위치에 삽입
       var proliaNextDate = nextProlia;
-      var evenityNextDate = nextEvenity;
+      var evenityNextDate = showEvenityNext ? nextEvenity : null;
       var bmdNextDate = nextBmd;
       var proliaNextInserted = false;
       var evenityNextInserted = false;
