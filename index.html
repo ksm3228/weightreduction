@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.27)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.28)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1883,12 +1883,12 @@ window.renderOsteo = function() {
     return getNext(a,'prolia',6).localeCompare(getNext(b,'prolia',6));
   });
 
-  // 마지막 기록 입력 환자 (가장 최근 record date 기준)
+  // 마지막 기록 입력 환자 (Firebase push key가 가장 큰 record 기준 — 실제 입력 순서)
   let lastEnteredId = null;
-  let lastEnteredDate = '';
+  let lastEnteredKey = '';
   sorted.forEach(function(p) {
     (p.records||[]).forEach(function(r) {
-      if ((r.date||'') > lastEnteredDate) { lastEnteredDate = r.date||''; lastEnteredId = p.id; }
+      if ((r.id||'') > lastEnteredKey) { lastEnteredKey = r.id||''; lastEnteredId = p.id; }
     });
   });
 
