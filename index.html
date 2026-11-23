@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.16)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.17)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -681,6 +681,10 @@ body::before {
       <input class="search-input" id="osteoSearchInput" placeholder="🔍  이름 / 등록번호 검색..." oninput="renderOsteo()" style="flex:1">
       <span id="osteoSearchCount" style="font-size:12px;color:var(--text3);font-family:var(--mono);flex-shrink:0;display:none"></span>
       <button id="btnOsteoEdit" onclick="toggleOsteoEditMode()" style="padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;flex-shrink:0">편집</button>
+    </div>
+    <!-- 추가급여 기준 안내 -->
+    <div style="margin:0 0 8px 0;padding:6px 12px;background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.3);border-radius:8px;font-size:12px;font-weight:600;color:#b45309">
+      📋 추가급여기준 : -2.5 &lt; T-score ≤ -2.0
     </div>
     <!-- 골다공증 환자 목록 -->
     <div class="osteo-list" id="osteoList"></div>
