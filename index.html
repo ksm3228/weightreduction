@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.15)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.16)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1871,12 +1871,19 @@ window.renderOsteo = function() {
     const bDaysCls = bDays !== null ? (bDays < 0 ? '#d93025' : bDays <= 30 ? '#d93025' : bDays <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
     const blockBorder = pDays !== null && pDays <= 30 ? 'border-color:rgba(217,48,37,0.5);border-width:2px' : '';
 
+    // 추가급여 해당 여부 사전 계산
+    var hasExtraPay = (p.records||[]).some(function(r) {
+      if (r.type !== 'bmd') return false;
+      var l = parseFloat(r.lumbar), f = parseFloat(r.femur);
+      return (!isNaN(l) && l > -2.5 && l <= -2.0) || (!isNaN(f) && f > -2.5 && f <= -2.0);
+    });
+
     var detailId = 'odetail_' + p.id;
     var html = '<div class="osteo-block" style="' + blockBorder + '">';
     // 헤더 (클릭 시 기록 목록 토글)
     html += '<div class="osteo-header" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';var arr=document.getElementById(\'darr_' + p.id + '\');arr.style.transform=el.style.display===\'none\'?\'rotate(0deg)\':\' rotate(180deg)\'})(document.getElementById(\'' + detailId + '\'))">';
     html += '<span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0">' + (p.regNo||'—') + '</span>';
-    html += '<span style="font-size:15px;font-weight:700;flex:1">' + p.name + (p.memo ? '<span style="font-size:11px;font-weight:500;color:#b45309;background:rgba(217,119,6,0.1);border-radius:4px;padding:1px 5px;margin-left:6px">' + p.memo + '</span>' : '') + '</span>';
+    html += '<span style="font-size:15px;font-weight:700;flex:1">' + p.name + (p.memo ? '<span style="font-size:11px;font-weight:500;color:#b45309;background:rgba(217,119,6,0.1);border-radius:4px;padding:1px 5px;margin-left:6px">' + p.memo + '</span>' : '') + (hasExtraPay ? '<span style="font-size:10px;font-weight:700;color:#b45309;background:rgba(217,119,6,0.15);border:1px solid rgba(217,119,6,0.4);border-radius:4px;padding:1px 5px;margin-left:6px">추가급여</span>' : '') + '</span>';
     if (p.gender) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.gender + '</span>';
     if (p.age) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.age + '세</span>';
     html += '<div onclick="event.stopPropagation()" style="display:flex;gap:4px;flex-shrink:0">';
