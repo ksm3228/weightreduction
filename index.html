@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.20)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.21)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1389,7 +1389,7 @@ window.render = function render() {
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0;min-width:1.5em;text-align:center">${idx+1}</span>
           <span class="reg-badge">${p.regNo || '—'}</span>
-          <span style="font-size:15px;font-weight:700;flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${lastMeasure?.drug ? `<span style="font-size:10px;font-weight:700;color:#fff;background:#6366f1;border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle">${lastMeasure.drug}</span>` : ''}</span>
+          <span style="font-size:15px;font-weight:700;flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${lastMeasure?.drug ? `<span style="font-size:10px;font-weight:700;color:#fff;background:${lastMeasure.drug.includes('큐시미아') ? '#0891b2' : '#6366f1'};border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle">${lastMeasure.drug}</span>` : ''}</span>
           ${p.gender ? `<span style="font-size:11px;color:var(--text);font-weight:700;flex-shrink:0">(${p.gender})</span>` : ''}
           ${p.age ? `<span style="font-size:11px;color:var(--text);font-weight:700;flex-shrink:0">${p.age}세</span>` : ''}
           ${lastMeasure?.date ? `<span style="font-size:11px;color:var(--danger);font-family:var(--mono);font-weight:700;flex-shrink:0">(${Math.floor((new Date()-new Date(lastMeasure.date))/(1000*60*60*24))}일전)</span>` : ''}
