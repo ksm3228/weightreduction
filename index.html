@@ -1871,9 +1871,10 @@ window.renderOsteo = function() {
     const bDaysCls = bDays !== null ? (bDays < 0 ? '#d93025' : bDays <= 30 ? '#d93025' : bDays <= 60 ? '#b45309' : '#087a60') : 'var(--text3)';
     const blockBorder = pDays !== null && pDays <= 30 ? 'border-color:rgba(217,48,37,0.5);border-width:2px' : '';
 
+    var detailId = 'odetail_' + p.id;
     var html = '<div class="osteo-block" style="' + blockBorder + '">';
-    // 헤더
-    html += '<div class="osteo-header">';
+    // 헤더 (클릭 시 기록 목록 토글)
+    html += '<div class="osteo-header" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';var arr=document.getElementById(\'darr_' + p.id + '\');arr.style.transform=el.style.display===\'none\'?\'rotate(0deg)\':\' rotate(180deg)\'})(document.getElementById(\'' + detailId + '\'))">';
     html += '<span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0">' + (p.regNo||'—') + '</span>';
     html += '<span style="font-size:15px;font-weight:700;flex:1">' + p.name + '</span>';
     if (p.gender) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.gender + '</span>';
@@ -1884,7 +1885,10 @@ window.renderOsteo = function() {
     } else {
       html += '<button class="btn-sm" onclick="openOsteoPatientSheet(' + p.id + ')">수정</button>';
     }
+    html += '<span id="darr_' + p.id + '" style="font-size:12px;color:var(--text3);transition:transform 0.2s;padding:0 2px">▼</span>';
     html += '</div></div>';
+    // 펼쳐지는 내용 전체 (기본 숨김)
+    html += '<div id="' + detailId + '" style="display:none">';
 
     // 프롤리아 / BMD 요약 박스 (접기/펼치기, 기본 접힘)
     var dateFont = '"Apple SD Gothic Neo","Malgun Gothic","나눔고딕",sans-serif';
@@ -2019,6 +2023,7 @@ window.renderOsteo = function() {
     html += '<div style="padding:10px 14px">';
     html += '<button class="btn-sm" style="border-color:var(--accent);color:var(--accent);width:100%" onclick="openOsteoRecordSheet(' + p.id + ',null)">+ 기록 추가</button>';
     html += '</div>';
+    html += '</div>'; // detailId 닫기
 
     html += '</div>';
     return html;
