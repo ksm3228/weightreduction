@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.32)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.33)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1065,8 +1065,9 @@ async function migrateWeight(meta) {
   if (!w.exists() && !o.exists()) return;
   if (!(meta.migrated && meta.migrated.weight)) {
     downloadJSON({ weight_patients: w.val(), osteo_patients: o.val() }, `weight-backup-원본-${stamp()}.json`);
-    await set(dbRef, await encryptJSON(Array.isArray(w.val()) ? w.val() : []));
-    await set(ref(db, 'osteo_patients_enc'), await encryptJSON(Array.isArray(o.val()) ? o.val() : []));
+    const [we, oe] = await Promise.all([get(dbRef), get(ref(db, 'osteo_patients_enc'))]);
+    if (!we.exists()) await set(dbRef, await encryptJSON(Array.isArray(w.val()) ? w.val() : []));
+    if (!oe.exists()) await set(ref(db, 'osteo_patients_enc'), await encryptJSON(Array.isArray(o.val()) ? o.val() : []));
     await set(ref(db, 'crypto_meta/migrated/weight'), Date.now());
     toast('암호화 완료');
   }
@@ -1118,7 +1119,7 @@ onAuthStateChanged(auth, user => {
   }
 });
 
-let syncStarted = false;
+let syncStarted = false, weightLocked = false, osteoLocked = false;
 function startSync() {
   if (syncStarted) return; syncStarted = true;
   showApp();
@@ -1126,7 +1127,7 @@ function startSync() {
     onValue(dbRef, async snap => {
       const blob = snap.val();
       let data = null;
-      if (blob) { try { data = await decryptJSON(blob); } catch(e) { setSyncDot(''); toast('복호화 실패'); return; } }
+      if (blob) { try { data = await decryptJSON(blob); weightLocked = false; } catch(e) { weightLocked = true; setSyncDot(''); alert('환자 데이터 복호화 실패 — 데이터 보호를 위해 저장을 막았습니다. 새로고침 후 다시 시도하세요.'); return; } }
       if (data && Array.isArray(data)) {
         all = data;
         // 새 환자가 Firebase에 없으면 병합
@@ -1157,7 +1158,7 @@ function setSyncDot(s) {
 /* ── persist ── */
 async function persist() {
   setSyncDot('syncing');
-  if (!cryptoKey) { setSyncDot(''); toast('잠금 상태 — 저장되지 않음'); return; }
+  if (!cryptoKey || weightLocked) { setSyncDot(''); toast('잠금·복호화 실패 상태 — 저장되지 않음'); return; }
   try { await set(dbRef, await encryptJSON(all)); setSyncDot('connected'); }
   catch(e) { setSyncDot(''); toast('저장 실패'); }
 }
@@ -1777,14 +1778,14 @@ function registerOsteo() {
   onValue(osteoDbRef, async snap => {
     const blob = snap.val();
     let data = null;
-    if (blob) { try { data = await decryptJSON(blob); } catch(e) { toast('복호화 실패'); return; } }
+    if (blob) { try { data = await decryptJSON(blob); osteoLocked = false; } catch(e) { osteoLocked = true; alert('골다공증 데이터 복호화 실패 — 데이터 보호를 위해 저장을 막았습니다. 새로고침 후 다시 시도하세요.'); return; } }
     osteoAll = (data && Array.isArray(data)) ? data : [];
     renderOsteo();
   });
 }
 async function persistOsteo() {
   setSyncDot('syncing');
-  if (!cryptoKey) { setSyncDot(''); toast('잠금 상태 — 저장되지 않음'); return; }
+  if (!cryptoKey || osteoLocked) { setSyncDot(''); toast('잠금·복호화 실패 상태 — 저장되지 않음'); return; }
   try { await set(osteoDbRef, await encryptJSON(osteoAll)); setSyncDot('connected'); }
   catch(e) { setSyncDot(''); toast('저장 실패'); }
 }
