@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.11)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.12)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1950,8 +1950,8 @@ window.renderOsteo = function() {
       var sortedRecs = [...p.records].sort((a,b)=>{
         var dc = (a.date||'').localeCompare(b.date||'');
         if (dc !== 0) return dc;
-        // 같은 날: prolia(0) → bmd(1)
-        var order = {prolia:0, bmd:1};
+        // 같은 날: bmd(0) → prolia(1)
+        var order = {bmd:0, prolia:1};
         return (order[a.type]||0) - (order[b.type]||0);
       });
       // 마지막 프롤리아/BMD 기준 다음 예정일 행: 날짜 순 위치에 삽입
