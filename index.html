@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.10)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.11)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -937,7 +937,7 @@ body::before {
 <!-- ════════════════════ SCRIPT ════════════════════ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -959,9 +959,122 @@ const ALLOWED_EMAILS = [
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
-const dbRef = ref(db, 'weight_patients');
+const plainWeightRef = ref(db, 'weight_patients');
+const plainOsteoRef = ref(db, 'osteo_patients');
+const dbRef = ref(db, 'weight_patients_enc');
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+
+// ── 공통 암호화: 병동 앱과 같은 암호 문구·키 공유 (AES-GCM 256, PBKDF2-SHA256) ──
+const KEY_STORE = 'wardKey_v1';
+let cryptoKey = null;
+const b64 = u8 => { let s=''; u8.forEach(c=>s+=String.fromCharCode(c)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pass, saltB64, iter) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name:'PBKDF2', salt: unb64(saltB64), iterations: iter || 310000, hash:'SHA-256' }, base, { name:'AES-GCM', length:256 }, true, ['encrypt','decrypt']);
+}
+async function encryptJSON(obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, cryptoKey, new TextEncoder().encode(JSON.stringify(obj)));
+  return { v:1, iv: b64(iv), ct: b64(new Uint8Array(ct)) };
+}
+async function decryptJSON(blob, key = cryptoKey) {
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv: unb64(blob.iv) }, key, unb64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function loadKeyLocal() {
+  try { const s = localStorage.getItem(KEY_STORE); if (!s) return null;
+    return await crypto.subtle.importKey('raw', unb64(s), { name:'AES-GCM' }, true, ['encrypt','decrypt']); } catch(e) { return null; }
+}
+async function saveKeyLocal(key) {
+  try { localStorage.setItem(KEY_STORE, b64(new Uint8Array(await crypto.subtle.exportKey('raw', key)))); } catch(e) {}
+}
+function downloadJSON(obj, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type:'application/json' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+const stamp = () => new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+window.lockNow = function() { try { localStorage.removeItem(KEY_STORE); } catch(e) {} location.reload(); };
+function clearKeyLocal() { try { localStorage.removeItem(KEY_STORE); } catch(e) {} }
+// 저장된 키가 맞으면 바로 통과, 아니면 암호 문구 입력창
+async function unlockCrypto(meta) {
+  const saved = await loadKeyLocal();
+  if (saved) { try { if (await decryptJSON(meta.check, saved) === 'ward-ok') { cryptoKey = saved; return; } } catch(e) {} clearKeyLocal(); }
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#f7f7f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;font-family:inherit';
+    ov.innerHTML = `<div style="font-size:40px">🔒</div>
+      <div style="font-size:18px;font-weight:600;color:#1a1917">암호 문구 입력</div>
+      <div style="font-size:13px;color:#6b6a66;text-align:center">병동 앱과 같은 암호 문구를 입력하세요.</div>
+      <input id="ckPw" type="password" placeholder="암호 문구" autocomplete="current-password" style="width:260px;padding:12px;border-radius:10px;border:1px solid #d4d3cf;font-size:15px">
+      <label style="font-size:13px;color:#6b6a66;display:flex;align-items:center;gap:6px"><input type="checkbox" id="ckRem" checked> 이 기기에서 기억하기</label>
+      <button id="ckBtn" style="padding:12px 28px;border-radius:10px;border:none;background:#16a34a;color:#fff;font-size:15px;font-weight:600;cursor:pointer">확인</button>
+      <div id="ckMsg" style="font-size:13px;color:#dc2626;min-height:18px"></div>`;
+    document.body.appendChild(ov);
+    const pw = ov.querySelector('#ckPw'), msg = ov.querySelector('#ckMsg'), btn = ov.querySelector('#ckBtn');
+    const go = async () => {
+      btn.disabled = true; msg.textContent = '확인 중...';
+      try {
+        const key = await deriveKey(pw.value, meta.salt, meta.iter);
+        if (await decryptJSON(meta.check, key).catch(() => null) !== 'ward-ok') { msg.textContent = '암호 문구가 틀렸습니다'; return; }
+        cryptoKey = key;
+        if (ov.querySelector('#ckRem').checked) await saveKeyLocal(key);
+        ov.remove(); resolve();
+      } catch(e) { msg.textContent = '오류: ' + e.message; }
+      finally { btn.disabled = false; }
+    };
+    btn.onclick = go; pw.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    setTimeout(() => pw.focus(), 50);
+  });
+}
+// 암호화 전 원본이 서버에 남아 있을 때 표시하는 배너
+function showPlainBanner(onBackup, onDelete) {
+  if (document.getElementById('plainBanner')) return;
+  const b = document.createElement('div'); b.id = 'plainBanner';
+  b.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:9000;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5';
+  b.innerHTML = `🔐 암호화 완료. 정상 동작을 확인한 뒤 서버에 남은 <b>암호화 전 원본</b>을 삭제하세요.
+    <div style="margin-top:6px;display:flex;gap:8px"><button data-a="bk" style="padding:5px 10px;border-radius:6px;border:1px solid #f59e0b;background:#fff;cursor:pointer">백업 다시 받기</button><button data-a="del" style="padding:5px 10px;border-radius:6px;border:none;background:#dc2626;color:#fff;cursor:pointer">원본 삭제</button><button data-a="x" style="margin-left:auto;padding:5px 10px;border-radius:6px;border:none;background:none;cursor:pointer">닫기</button></div>`;
+  b.onclick = async e => {
+    const a = e.target.dataset.a; if (!a) return;
+    if (a === 'x') b.remove();
+    if (a === 'bk') onBackup();
+    if (a === 'del') {
+      if (!confirm('서버에 남아 있는 암호화 전 원본을 삭제합니다.\n백업 파일을 받아 두셨나요?')) return;
+      if (prompt('삭제하려면 "삭제"라고 입력하세요') !== '삭제') return;
+      try { await onDelete(); b.remove(); alert('원본 삭제 완료'); } catch(err) { alert('삭제 실패: ' + err.message); }
+    }
+  };
+  document.body.appendChild(b);
+}
+
+async function backupWeight() {
+  const [w, o] = await Promise.all([get(plainWeightRef), get(plainOsteoRef)]);
+  if (w.exists() || o.exists()) downloadJSON({ weight_patients: w.val(), osteo_patients: o.val() }, `weight-backup-원본-${stamp()}.json`);
+  downloadJSON({ weight_patients: all, osteo_patients: osteoAll }, `weight-backup-현재-${stamp()}.json`);
+}
+// 최초 1회: 평문 → 암호문 변환 (백업 다운로드 후)
+async function migrateWeight(meta) {
+  const [w, o] = await Promise.all([get(plainWeightRef), get(plainOsteoRef)]);
+  if (!w.exists() && !o.exists()) return;
+  if (!(meta.migrated && meta.migrated.weight)) {
+    downloadJSON({ weight_patients: w.val(), osteo_patients: o.val() }, `weight-backup-원본-${stamp()}.json`);
+    await set(dbRef, await encryptJSON(Array.isArray(w.val()) ? w.val() : []));
+    await set(ref(db, 'osteo_patients_enc'), await encryptJSON(Array.isArray(o.val()) ? o.val() : []));
+    await set(ref(db, 'crypto_meta/migrated/weight'), Date.now());
+    toast('암호화 완료');
+  }
+  showPlainBanner(backupWeight, async () => { await remove(plainWeightRef); await remove(plainOsteoRef); });
+}
+async function initCrypto() {
+  const m = await get(ref(db, 'crypto_meta'));
+  if (!m.exists()) { alert('병동 앱에서 암호 문구를 먼저 설정하세요.'); return; }
+  const meta = m.val();
+  await unlockCrypto(meta);
+  try { await migrateWeight(meta); } catch(e) { toast('암호화 변환 오류: ' + e.message); }
+  startSync();
+}
 
 /* ── 상태 ── */
 let all = [];          // 환자 배열
@@ -989,14 +1102,26 @@ window.googleLogin = async () => {
   } catch(e) { alert('로그인 실패: ' + e.message); }
 };
 getRedirectResult(auth).catch(e => console.error(e));
-window.googleLogout = () => signOut(auth);
+window.googleLogout = async () => { clearKeyLocal(); await signOut(auth); location.reload(); };
 
 onAuthStateChanged(auth, user => {
   document.getElementById('loadingOverlay').style.display = 'none';
   if (user && ALLOWED_EMAILS.includes(user.email)) {
-    showApp();
-    onValue(dbRef, snap => {
-      const data = snap.val();
+    initCrypto();
+  } else {
+    showLogin();
+  }
+});
+
+let syncStarted = false;
+function startSync() {
+  if (syncStarted) return; syncStarted = true;
+  showApp();
+  registerOsteo();
+    onValue(dbRef, async snap => {
+      const blob = snap.val();
+      let data = null;
+      if (blob) { try { data = await decryptJSON(blob); } catch(e) { setSyncDot(''); toast('복호화 실패'); return; } }
       if (data && Array.isArray(data)) {
         all = data;
         // 새 환자가 Firebase에 없으면 병합
@@ -1016,10 +1141,7 @@ onAuthStateChanged(auth, user => {
       if (histStack.length === 0) pushHistory();
       render();
     }, () => { setSyncDot(''); toast('Firebase 연결 실패'); });
-  } else {
-    showLogin();
-  }
-});
+}
 
 /* ── sync dot ── */
 function setSyncDot(s) {
@@ -1030,7 +1152,8 @@ function setSyncDot(s) {
 /* ── persist ── */
 async function persist() {
   setSyncDot('syncing');
-  try { await set(dbRef, all); setSyncDot('connected'); }
+  if (!cryptoKey) { setSyncDot(''); toast('잠금 상태 — 저장되지 않음'); return; }
+  try { await set(dbRef, await encryptJSON(all)); setSyncDot('connected'); }
   catch(e) { setSyncDot(''); toast('저장 실패'); }
 }
 
@@ -1617,21 +1740,26 @@ updateDate();
 /* ══════════════════════════════════════════
    골다공증 탭
 ══════════════════════════════════════════ */
-const osteoDbRef = ref(db, 'osteo_patients');
+const osteoDbRef = ref(db, 'osteo_patients_enc');
 let osteoAll = [];
 let osteoNid = Date.now() + 1000000;
 let osteoEditMode = false;
 let currentOsteoType = '';
 
 // Firebase 연동
-onValue(osteoDbRef, snap => {
-  const data = snap.val();
-  osteoAll = (data && Array.isArray(data)) ? data : [];
-  renderOsteo();
-});
+function registerOsteo() {
+  onValue(osteoDbRef, async snap => {
+    const blob = snap.val();
+    let data = null;
+    if (blob) { try { data = await decryptJSON(blob); } catch(e) { toast('복호화 실패'); return; } }
+    osteoAll = (data && Array.isArray(data)) ? data : [];
+    renderOsteo();
+  });
+}
 async function persistOsteo() {
   setSyncDot('syncing');
-  try { await set(osteoDbRef, osteoAll); setSyncDot('connected'); }
+  if (!cryptoKey) { setSyncDot(''); toast('잠금 상태 — 저장되지 않음'); return; }
+  try { await set(osteoDbRef, await encryptJSON(osteoAll)); setSyncDot('connected'); }
   catch(e) { setSyncDot(''); toast('저장 실패'); }
 }
 
