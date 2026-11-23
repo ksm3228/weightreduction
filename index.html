@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.23)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.26)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1357,7 +1357,28 @@ window.render = function render() {
     return;
   }
 
-  el.innerHTML = list.map((p, idx) => {
+  // 30일 내원 통계
+  const now30 = new Date();
+  const cutoff30 = new Date(now30); cutoff30.setDate(cutoff30.getDate() - 30);
+  const cutoffStr30 = cutoff30.toISOString().slice(0,10);
+  let cnt마운자로 = 0, cnt큐시미아 = 0, cnt실비 = 0;
+  list.forEach(function(p) {
+    const measures = p.measurements || [];
+    const recent = measures.filter(m => (m.date||'') >= cutoffStr30);
+    if (!recent.length) return;
+    const lastRecent = [...recent].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+    if (lastRecent.drug && lastRecent.drug.includes('마운자로')) cnt마운자로++;
+    else if (lastRecent.drug && lastRecent.drug.includes('큐시미아')) cnt큐시미아++;
+    if (p.insurance) cnt실비++;
+  });
+  const statsBar = `<div style="margin:0 0 8px 0;padding:7px 12px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);border-radius:9px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:700;color:#6366f1;white-space:nowrap">📊 최근 30일 내원</span>
+    <span style="font-size:12px;font-weight:800;color:#6366f1;background:rgba(99,102,241,0.12);border-radius:6px;padding:2px 9px;white-space:nowrap">마운자로 ${cnt마운자로}명</span>
+    <span style="font-size:12px;font-weight:800;color:#d97706;background:rgba(217,119,6,0.12);border-radius:6px;padding:2px 9px;white-space:nowrap">큐시미아 ${cnt큐시미아}명</span>
+    <span style="font-size:12px;font-weight:800;color:#087a60;background:rgba(11,158,124,0.12);border-radius:6px;padding:2px 9px;white-space:nowrap">실비 ${cnt실비}명</span>
+  </div>`;
+
+  el.innerHTML = statsBar + list.map((p, idx) => {
     const isOpen = openIds.has(p.id);
     const measures = p.measurements || [];
 
@@ -1862,6 +1883,15 @@ window.renderOsteo = function() {
     return getNext(a,'prolia',6).localeCompare(getNext(b,'prolia',6));
   });
 
+  // 마지막 기록 입력 환자 (가장 최근 record date 기준)
+  let lastEnteredId = null;
+  let lastEnteredDate = '';
+  sorted.forEach(function(p) {
+    (p.records||[]).forEach(function(r) {
+      if ((r.date||'') > lastEnteredDate) { lastEnteredDate = r.date||''; lastEnteredId = p.id; }
+    });
+  });
+
   el.innerHTML = sorted.map(p => {
     const proliaRecs = [...(p.records||[])].filter(r=>r.type==='prolia').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     const bmdRecs    = [...(p.records||[])].filter(r=>r.type==='bmd').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
@@ -1883,11 +1913,53 @@ window.renderOsteo = function() {
     });
 
     var detailId = 'odetail_' + p.id;
+    var isLastEntered = (p.id === lastEnteredId);
+    var initDisplay = isLastEntered ? 'block' : 'none';
+    var initArrow = isLastEntered ? 'rotate(180deg)' : 'rotate(0deg)';
+
+    // BMD 미니 스파크라인 (접힌 헤더용)
+    var bmdMini = '';
+    var bmdSorted = [...bmdRecs].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    if (bmdSorted.length >= 1) {
+      var bmdVals = bmdSorted.map(function(r) {
+        var l = parseFloat(r.lumbar), f = parseFloat(r.femur);
+        if (!isNaN(l) && !isNaN(f)) return Math.min(l, f);
+        if (!isNaN(l)) return l;
+        if (!isNaN(f)) return f;
+        return null;
+      }).filter(function(v) { return v !== null; });
+      if (bmdVals.length >= 1) {
+        // 단일값이면 점 하나, 여러값이면 스파크라인
+        var minV = Math.min.apply(null, bmdVals) - 0.3;
+        var maxV = Math.max.apply(null, bmdVals) + 0.3;
+        var range = maxV - minV || 1;
+        var W = 56, H = 22;
+        var pts = bmdVals.map(function(v, i) {
+          var x = bmdVals.length === 1 ? W/2 : Math.round(i / (bmdVals.length - 1) * (W - 4) + 2);
+          var y = Math.round(H - 2 - ((v - minV) / range) * (H - 4));
+          return x + ',' + y;
+        });
+        var lastV = bmdVals[bmdVals.length - 1];
+        var lineColor = lastV > -2.0 ? '#087a60' : lastV > -2.5 ? '#d97706' : '#d93025';
+        var polyline = bmdVals.length > 1
+          ? '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + lineColor + '" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>'
+          : '';
+        var lastPt = pts[pts.length - 1].split(',');
+        bmdMini = '<span style="display:inline-flex;align-items:center;gap:3px;margin-left:7px;vertical-align:middle">'
+          + '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="border:1px solid rgba(11,158,124,0.2);border-radius:4px;background:rgba(11,158,124,0.04)">'
+          + polyline
+          + '<circle cx="' + lastPt[0] + '" cy="' + lastPt[1] + '" r="2.5" fill="' + lineColor + '"/>'
+          + '</svg>'
+          + '<span style="font-size:10px;font-weight:800;color:' + lineColor + ';font-family:var(--mono)">' + lastV.toFixed(1) + '</span>'
+          + '</span>';
+      }
+    }
+
     var html = '<div class="osteo-block" style="' + blockBorder + '">';
     // 헤더 (클릭 시 기록 목록 토글)
     html += '<div class="osteo-header" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';var arr=document.getElementById(\'darr_' + p.id + '\');arr.style.transform=el.style.display===\'none\'?\'rotate(0deg)\':\' rotate(180deg)\'})(document.getElementById(\'' + detailId + '\'))">';
     html += '<span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0">' + (p.regNo||'—') + '</span>';
-    html += '<span style="font-size:15px;font-weight:700;flex:1">' + p.name + (hasExtraPay ? '<span style="font-size:11px;font-weight:800;color:#fff;background:#d97706;border-radius:5px;padding:2px 7px;margin-left:7px;letter-spacing:0.01em">추가급여</span>' : '') + (p.memo ? '<span style="font-size:11px;font-weight:500;color:#b45309;background:rgba(217,119,6,0.1);border-radius:4px;padding:1px 5px;margin-left:6px">' + p.memo + '</span>' : '') + '</span>';
+    html += '<span style="font-size:15px;font-weight:700;flex:1">' + p.name + (hasExtraPay ? '<span style="font-size:11px;font-weight:800;color:#fff;background:#d97706;border-radius:5px;padding:2px 7px;margin-left:7px;letter-spacing:0.01em">추가급여</span>' : '') + (p.memo ? '<span style="font-size:11px;font-weight:500;color:#b45309;background:rgba(217,119,6,0.1);border-radius:4px;padding:1px 5px;margin-left:6px">' + p.memo + '</span>' : '') + bmdMini + '</span>';
     if (p.gender) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.gender + '</span>';
     if (p.age) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.age + '세</span>';
     html += '<div onclick="event.stopPropagation()" style="display:flex;gap:4px;flex-shrink:0">';
@@ -1896,10 +1968,10 @@ window.renderOsteo = function() {
     } else {
       html += '<button class="btn-sm" onclick="openOsteoPatientSheet(' + p.id + ')">수정</button>';
     }
-    html += '<span id="darr_' + p.id + '" style="font-size:12px;color:var(--text3);transition:transform 0.2s;padding:0 2px">▼</span>';
+    html += '<span id="darr_' + p.id + '" style="font-size:12px;color:var(--text3);transition:transform 0.2s;padding:0 2px;transform:' + initArrow + '">▼</span>';
     html += '</div></div>';
-    // 펼쳐지는 내용 전체 (기본 숨김)
-    html += '<div id="' + detailId + '" style="display:none">';
+    // 펼쳐지는 내용 전체 (마지막 입력자 기본 펼침)
+    html += '<div id="' + detailId + '" style="display:' + initDisplay + '">';
 
     // 프롤리아 / BMD 요약 박스 (접기/펼치기, 기본 접힘)
     var dateFont = '"Apple SD Gothic Neo","Malgun Gothic","나눔고딕",sans-serif';
@@ -2008,8 +2080,8 @@ window.renderOsteo = function() {
         var typeLabel = r.type === 'prolia' ? '💉 프롤리아' : '🦴 BMD';
         var extra = '';
         if (r.type === 'bmd') {
-          if (r.lumbar) extra += ' L' + r.lumbar;
-          if (r.femur)  extra += ' F' + r.femur;
+          if (r.lumbar) extra += ' L' + parseFloat(r.lumbar).toFixed(1);
+          if (r.femur)  extra += ' F' + parseFloat(r.femur).toFixed(1);
         }
         var extraBadge = '';
         if (r.type === 'bmd') {
