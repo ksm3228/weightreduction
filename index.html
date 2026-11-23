@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.14)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.15)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1971,6 +1971,17 @@ window.renderOsteo = function() {
           + '</div>';
       }
 
+      // 추가 급여 적용 BMD 날짜 계산 (가장 최근 추가급여 조건 BMD)
+      var extraPayDate = null;
+      sortedRecs.forEach(function(r) {
+        if (r.type === 'bmd') {
+          var l = parseFloat(r.lumbar), f = parseFloat(r.femur);
+          if ((!isNaN(l) && l > -2.5 && l <= -2.0) || (!isNaN(f) && f > -2.5 && f <= -2.0)) {
+            if (!extraPayDate || r.date > extraPayDate) extraPayDate = r.date;
+          }
+        }
+      });
+
       sortedRecs.forEach(function(r) {
         // 프롤리아 다음예정 삽입 위치
         if (proliaNextDate && !proliaNextInserted && (r.date||'') > proliaNextDate) {
@@ -1998,10 +2009,14 @@ window.renderOsteo = function() {
             extraBadge = '<span style="font-size:10px;font-weight:700;color:#b45309;background:rgba(217,119,6,0.12);border:1px solid rgba(217,119,6,0.3);border-radius:4px;padding:1px 5px;flex-shrink:0">추가 2년(1+1) 급여</span>';
           }
         }
-        // BMD 행은 테두리로 구분
+        // 추가급여 BMD 이후 프롤리아: 주황 테두리
+        var isExtraProlia = r.type === 'prolia' && extraPayDate && (r.date||'') >= extraPayDate;
+        // BMD 행 또는 추가급여 프롤리아 행 스타일
         var rowStyle = r.type === 'bmd'
           ? 'border-left:3px solid rgba(11,158,124,0.5);background:rgba(11,158,124,0.03);margin:0 8px;border-radius:0 6px 6px 0'
-          : '';
+          : isExtraProlia
+            ? 'border-left:3px solid rgba(217,119,6,0.7);background:rgba(217,119,6,0.05);margin:0 8px;border-radius:0 6px 6px 0'
+            : '';
         html += '<div class="osteo-record-row" style="' + rowStyle + '">';
         html += '<span style="font-size:11px;color:var(--text3);font-family:var(--mono);flex-shrink:0">' + fmtDate(r.date) + '</span>';
         html += '<span style="font-size:12px;font-weight:700;color:' + (r.type==='prolia'?'#6366f1':'#0b9e7c') + ';flex:1">' + typeLabel + extra + '</span>';
