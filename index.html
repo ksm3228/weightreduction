@@ -1317,8 +1317,8 @@ window.render = function render() {
       const bStarts = b.name.toLowerCase().startsWith(query) ? 0 : 1;
       if (aStarts !== bStarts) return aStarts - bStarts;
     }
-    const aLast = (a.measurements||[]).sort((x,y) => (y.date||'').localeCompare(x.date||''))[0]?.date || '';
-    const bLast = (b.measurements||[]).sort((x,y) => (y.date||'').localeCompare(x.date||''))[0]?.date || '';
+    const aLast = (a.measurements||[]).sort((x,y) => (y.date||'').localeCompare(x.date||''))[0]?.date || '9999-99-99';
+    const bLast = (b.measurements||[]).sort((x,y) => (y.date||'').localeCompare(x.date||''))[0]?.date || '9999-99-99';
     return bLast.localeCompare(aLast);
   });
 
@@ -1876,9 +1876,9 @@ window.renderOsteo = function() {
     return;
   }
 
-  // 마지막 내원일 기준 최신순 정렬
+  // 마지막 내원일 기준 최신순 정렬 (기록 없는 신환은 최상단)
   const sorted = [...list].sort((a, b) => {
-    const lastDate = p => [...(p.records||[])].map(r=>r.date||'').sort().reverse()[0] || '';
+    const lastDate = p => [...(p.records||[])].map(r=>r.date||'').sort().reverse()[0] || '9999-99-99';
     return lastDate(b).localeCompare(lastDate(a));
   });
 
