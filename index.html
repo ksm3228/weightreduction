@@ -602,7 +602,7 @@ body::before {
       <span class="app-title">
         <span class="dot"></span>
         비만·골다공증 클리닉
-        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.33)</span>
+        <span style="font-size:11px;font-weight:400;color:var(--text3)">(v11.34)</span>
         <span class="sync-dot" id="syncDot"></span>
       </span>
       <div class="app-bar-actions">
@@ -1974,9 +1974,11 @@ window.renderOsteo = function() {
 
     var html = '<div class="osteo-block" style="' + blockBorder + '">';
     // 헤더 (클릭 시 기록 목록 토글)
-    html += '<div class="osteo-header" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';var arr=document.getElementById(\'darr_' + p.id + '\');arr.style.transform=el.style.display===\'none\'?\'rotate(0deg)\':\' rotate(180deg)\'})(document.getElementById(\'' + detailId + '\'))">';
+    html += '<div class="osteo-header" style="cursor:pointer;flex-direction:column;align-items:stretch;gap:3px" onclick="(function(el){el.style.display=el.style.display===\'none\'?\'block\':\'none\';var arr=document.getElementById(\'darr_' + p.id + '\');arr.style.transform=el.style.display===\'none\'?\'rotate(0deg)\':\' rotate(180deg)\'})(document.getElementById(\'' + detailId + '\'))">';
+    // 1행: 등록번호 / 이름+추가급여 / 경과일 / 성별·나이 / 버튼·화살표
+    html += '<div style="display:flex;align-items:center;gap:6px">';
     html += '<span style="font-family:var(--mono);font-size:12px;color:var(--text3);flex-shrink:0">' + (p.regNo||'—') + '</span>';
-    html += '<span style="font-size:15px;font-weight:700;flex:1">' + p.name + (hasExtraPay ? '<span style="font-size:11px;font-weight:800;color:#fff;background:#d97706;border-radius:5px;padding:2px 7px;margin-left:7px;letter-spacing:0.01em">추가급여</span>' : '') + (p.memo ? '<span style="font-size:11px;font-weight:500;color:#b45309;background:rgba(217,119,6,0.1);border-radius:4px;padding:1px 5px;margin-left:6px">' + p.memo + '</span>' : '') + bmdMini + '</span>';
+    html += '<span style="font-size:15px;font-weight:700;flex:1">' + p.name + (hasExtraPay ? '<span style="font-size:11px;font-weight:800;color:#fff;background:#d97706;border-radius:5px;padding:2px 7px;margin-left:7px;letter-spacing:0.01em">추가급여</span>' : '') + '</span>';
     if (visitElapsed !== null) html += '<span style="font-size:11px;font-weight:700;color:' + visitColor + ';white-space:nowrap;flex-shrink:0">' + visitElapsed + '일 전</span>';
     if (p.gender) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.gender + '</span>';
     if (p.age) html += '<span style="font-size:11px;font-weight:700;color:var(--text2)">' + p.age + '세</span>';
@@ -1988,6 +1990,14 @@ window.renderOsteo = function() {
     }
     html += '<span id="darr_' + p.id + '" style="font-size:12px;color:var(--text3);transition:transform 0.2s;padding:0 2px;transform:' + initArrow + '">▼</span>';
     html += '</div></div>';
+    // 2행: 메모(참고기록) + BMD 미니그래프 (있을 때만)
+    if (p.memo || bmdMini) {
+      html += '<div style="display:flex;align-items:center;gap:6px;padding-left:2px">';
+      if (p.memo) html += '<span style="font-size:11px;font-weight:500;color:#b45309;background:rgba(217,119,6,0.1);border-radius:4px;padding:1px 6px">' + p.memo + '</span>';
+      if (bmdMini) html += bmdMini;
+      html += '</div>';
+    }
+    html += '</div>';
     // 펼쳐지는 내용 전체 (마지막 입력자 기본 펼침)
     html += '<div id="' + detailId + '" style="display:' + initDisplay + '">';
 
